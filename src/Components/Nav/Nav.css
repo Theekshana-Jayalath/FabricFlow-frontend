@@ -1,0 +1,207 @@
+/* Navigation Bar Styles */
+.navbar {
+  @apply fixed top-0 left-0 right-0 z-50 bg-white shadow-lg border-b border-gray-200;
+  height: 70px;
+}
+
+.nav-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between;
+}
+
+/* Logo Styles */
+.nav-logo {
+  @apply flex items-center no-underline;
+}
+
+.logo-content {
+  @apply flex items-center space-x-2;
+}
+
+.logo-icon {
+  @apply text-2xl;
+}
+
+.logo-text {
+  @apply text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-200;
+}
+
+/* Navigation Menu */
+.nav-menu {
+  @apply hidden md:flex items-center space-x-1 list-none m-0 p-0;
+}
+
+.nav-item {
+  @apply relative;
+}
+
+.nav-link {
+  @apply flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 no-underline transition-all duration-200 text-sm font-medium;
+}
+
+.nav-item.active .nav-link {
+  @apply bg-blue-50 text-blue-700 border border-blue-200;
+}
+
+.nav-item.active .nav-link i {
+  @apply text-blue-600;
+}
+
+.nav-link i {
+  @apply text-base text-gray-500;
+}
+
+.nav-link span {
+  @apply font-medium;
+}
+
+/* Profile Section */
+.nav-profile {
+  @apply relative;
+}
+
+.profile-dropdown {
+  @apply relative;
+}
+
+.profile-btn {
+  @apply flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors duration-200 cursor-pointer text-sm font-medium;
+}
+
+.profile-btn i.fa-user-circle {
+  @apply text-lg text-gray-600;
+}
+
+.profile-btn i.fa-chevron-down {
+  @apply text-xs text-gray-500;
+}
+
+.dropdown-content {
+  @apply absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible transform scale-95 transition-all duration-200;
+}
+
+.profile-dropdown:hover .dropdown-content {
+  @apply opacity-100 visible transform scale-100;
+}
+
+.dropdown-link {
+  @apply flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 no-underline transition-colors duration-150;
+}
+
+.dropdown-link i {
+  @apply text-gray-500 w-4;
+}
+
+.dropdown-divider {
+  @apply my-2 border-gray-200;
+}
+
+.logout-btn {
+  @apply w-full text-left border-0 bg-transparent hover:bg-red-50 hover:text-red-600;
+}
+
+.logout-btn i {
+  @apply text-red-500;
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  @apply md:hidden flex flex-col justify-center items-center w-8 h-8 cursor-pointer;
+}
+
+.hamburger-line {
+  @apply w-6 h-0.5 bg-gray-600 mb-1 transition-all duration-300;
+}
+
+.hamburger-line:last-child {
+  @apply mb-0;
+}
+
+/* Mobile Menu Styles */
+@media (max-width: 768px) {
+  .nav-menu {
+    @apply fixed top-16 left-0 right-0 bg-white shadow-lg border-t border-gray-200 flex-col items-start space-x-0 space-y-0 p-4 transform -translate-y-full opacity-0 invisible transition-all duration-300;
+  }
+  
+  .nav-menu.active {
+    @apply transform translate-y-0 opacity-100 visible;
+  }
+  
+  .nav-item {
+    @apply w-full;
+  }
+  
+  .nav-link {
+    @apply w-full px-4 py-3 border-b border-gray-100;
+  }
+  
+  .nav-profile {
+    @apply md:block hidden;
+  }
+}
+
+/* Hover Effects */
+.nav-link:hover i {
+  @apply transform scale-110 transition-transform duration-200;
+}
+
+.nav-item.active .nav-link:hover {
+  @apply bg-blue-100;
+}
+
+/* Focus States for Accessibility */
+.nav-link:focus,
+.profile-btn:focus {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* Animation for Active State */
+.nav-item.active .nav-link::before {
+  content: '';
+  @apply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all duration-300;
+}
+
+/* Fabric Flow Theme Colors */
+.navbar {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.nav-item.active .nav-link {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+/* Custom Fabric Industry Icons */
+.nav-link i.fa-industry::before {
+  content: '🏭';
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+
+.nav-link i.fa-boxes::before {
+  content: '📦';
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .nav-container {
+    @apply px-4;
+  }
+  
+  .nav-menu {
+    @apply space-x-0;
+  }
+  
+  .nav-link {
+    @apply px-3 text-xs;
+  }
+  
+  .nav-link span {
+    @apply hidden lg:inline;
+  }
+}
+
+/* Print styles */
+@media print {
+  .navbar {
+    @apply hidden;
+  }
+}

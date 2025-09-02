@@ -1,35 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// App.jsx
+import { Routes, Route } from "react-router-dom";
+import "./App.css";
+import UserDetails from "./Components/UserDetail/UserDetails";
+import EmployeeDetails from "./Components/EmployeeDetail/EmployeeDetails";
+
+// Admin Components
+import AdminLayout from "./admin/components/AdminLayout";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import UserTable from "./admin/components/UserTable";
+import EmployeeTable from "./admin/components/EmployeeTable";
+import Charts from "./admin/components/Charts";
+import Widgets from "./admin/components/Widgets";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<UserDetails />} />  
+        <Route path="/UserDetails" element={<UserDetails />} />
+        <Route path="/Employees" element={<EmployeeDetails />} />
+        <Route path="/Employees/:id" element={<EmployeeDetails />} />
+
+        {/* Admin routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<UserTable />} />
+          <Route path="employees" element={<EmployeeTable />} />
+          <Route path="charts" element={<Charts />} />
+          <Route path="widgets" element={<Widgets />} />
+        </Route>
+      </Routes>
+    </div>
+  );
 }
 
-export default App
+export default App;
