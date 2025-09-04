@@ -1,10 +1,9 @@
 // EmployeeDetails.jsx
 import React, { useEffect, useState } from "react";
-import Nav from "../Nav/Nav.jsx";
-import EmployeeDisplay from "../EmployeeDisplay/EmployeeDisplay.jsx"; // Make a similar display component
+import EmployeeDisplay from "../EmployeeDisplay/EmployeeDisplay.jsx";
 import axios from "axios";
 
-const URL = "http://localhost:5000/employees"; // Employee backend URL
+const URL = "http://localhost:5000/employees";
 
 const fetchHandler = async () => {
   try {
@@ -51,33 +50,26 @@ function EmployeeDetails() {
     link.setAttribute("href", url);
     link.setAttribute("download", "employee_details.csv");
     link.style.visibility = "hidden";
-
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
   };
 
-  const convertToCSV = (array) => {
-    if (!array || array.length === 0) return "";
+  const convertToCSV = (data) => {
+    if (!data.length) return "";
 
-    const headers = Object.keys(array[0]).join(",");
-    const rows = array
-      .map((item) =>
-        Object.values(item)
-          .map((value) =>
-            typeof value === "string" ? `"${value.replace(/"/g, '""')}"` : value
-          )
-          .join(",")
-      )
-      .join("\n");
+    const headers = Object.keys(data[0]);
+    const csvHeaders = headers.join(",");
 
-    return `${headers}\n${rows}`;
+    const csvRows = data.map((row) =>
+      headers.map((header) => `"${row[header] || ""}"`).join(",")
+    );
+
+    return [csvHeaders, ...csvRows].join("\n");
   };
 
   return (
     <div>
-      <Nav />
       <div className="p-5">
         <div className="flex gap-3 mb-5">
           <input
@@ -85,27 +77,45 @@ function EmployeeDetails() {
             placeholder="Search employees..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border p-2 rounded flex-1 max-w-md"
+            className="border border-gray-300 rounded px-3 py-2 flex-1"
           />
           <button
             onClick={handleSearch}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#EF6869] transition-colors"
           >
             Search
           </button>
           <button
             onClick={downloadEmployeeDetails}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className="bg-[#EF6869] text-white px-4 py-2 rounded hover:bg-[#005A54] transition-colors"
           >
-            Download Employee Details
+            Download CSV
           </button>
         </div>
 
-        {employees && employees.length > 0 ? (
-          employees.map((emp, i) => <EmployeeDisplay key={i} employee={emp} />)
-        ) : (
-          <p>No employees found</p>
-        )}
+        {/* Employee Header */}
+        <div className="bg-gradient-to-r from-[#005A54] to-[#EF6869] text-white p-8 rounded-lg mb-6">
+          <h1 className="text-3xl font-bold mb-2">Employee Management</h1>
+          <p className="text-lg opacity-90">Manage your workforce efficiently</p>
+        </div>
+
+        {/* Employee Display */}
+        <div className="employees-container">
+          {employees && employees.length > 0 ? (
+            employees.map((employee, i) => (
+              <div key={i}>
+                <EmployeeDisplay employee={employee} />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No employees found or backend not connected</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Make sure your backend server is running on http://localhost:5000
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

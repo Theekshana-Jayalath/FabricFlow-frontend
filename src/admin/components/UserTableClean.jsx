@@ -27,7 +27,7 @@ import {
   Alert
 } from '@mui/material';
 import {
-  Work,
+  Person,
   Edit,
   Delete,
   Visibility,
@@ -37,46 +37,44 @@ import {
   Email,
   Phone,
   Home,
-  Cake,
-  Badge,
-  Business
+  Cake
 } from '@mui/icons-material';
 import axios from 'axios';
 import jsPDF from 'jspdf';
-import { autoTable } from 'jspdf-autotable';
-import EmployeeViewEditModal from './EmployeeViewEditModal';
+import autoTable from 'jspdf-autotable';
+import UserViewEditModal from './UserViewEditModal';
 
-const EmployeeTable = () => {
-  const [employees, setEmployees] = useState([]);
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
+const UserTable = () => {
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [alert, setAlert] = useState({ show: false, message: '', severity: 'info' });
   
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
 
-  // Fetch employees from backend
+  // Fetch users from backend
   useEffect(() => {
-    fetchEmployees();
+    fetchUsers();
   }, []);
 
-  const fetchEmployees = async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/employees');
-      const employeeData = response.data?.employees || response.data || [];
-      setEmployees(employeeData);
-      setFilteredEmployees(employeeData);
+      const response = await axios.get('http://localhost:5000/users');
+      const userData = response.data?.users || response.data || [];
+      setUsers(userData);
+      setFilteredUsers(userData);
     } catch (error) {
-      console.error('Error fetching employees:', error);
-      showAlert('Failed to fetch employees from server', 'error');
-      setEmployees([]);
-      setFilteredEmployees([]);
+      console.error('Error fetching users:', error);
+      showAlert('Failed to fetch users from server', 'error');
+      setUsers([]);
+      setFilteredUsers([]);
     } finally {
       setLoading(false);
     }
@@ -85,109 +83,100 @@ const EmployeeTable = () => {
   // Handle search
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setFilteredEmployees(employees);
+      setFilteredUsers(users);
     } else {
-      const filtered = employees.filter((employee) =>
-        Object.values(employee).some((value) =>
+      const filtered = users.filter((user) =>
+        Object.values(user).some((value) =>
           String(value).toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
-      setFilteredEmployees(filtered);
+      setFilteredUsers(filtered);
     }
-  }, [searchTerm, employees]);
+  }, [searchTerm, users]);
 
   const showAlert = (message, severity = 'info') => {
     setAlert({ show: true, message, severity });
     setTimeout(() => setAlert({ show: false, message: '', severity: 'info' }), 5000);
   };
 
-  const handleEdit = (employee) => {
-    setSelectedEmployee(employee);
+  const handleEdit = (user) => {
+    console.log('Edit clicked for:', user);
+    setSelectedUser(user);
     setModalMode('edit');
     setModalOpen(true);
   };
 
-  const handleDeleteClick = (employee) => {
-    setEmployeeToDelete(employee);
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!employeeToDelete) return;
+    if (!userToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/employees/${employeeToDelete._id}`);
-      setEmployees(employees.filter(emp => emp._id !== employeeToDelete._id));
-      showAlert(`Employee "${employeeToDelete.empName}" deleted successfully!`, 'success');
+      await axios.delete(`http://localhost:5000/users/${userToDelete._id}`);
+      setUsers(users.filter(u => u._id !== userToDelete._id));
+      showAlert(`User "${userToDelete.name}" deleted successfully!`, 'success');
       setDeleteDialogOpen(false);
-      setEmployeeToDelete(null);
+      setUserToDelete(null);
     } catch (error) {
-      showAlert('Failed to delete employee', 'error');
+      showAlert('Failed to delete user', 'error');
       console.error(error);
     }
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setEmployeeToDelete(null);
+    setUserToDelete(null);
   };
 
-  const handleView = (employee) => {
-    setSelectedEmployee(employee);
+  const handleView = (user) => {
+    console.log('View clicked for:', user);
+    setSelectedUser(user);
     setModalMode('view');
     setModalOpen(true);
   };
 
   const handleModalClose = () => {
     setModalOpen(false);
-    setSelectedEmployee(null);
+    setSelectedUser(null);
     setModalMode('view');
   };
 
-  const handleEmployeeUpdate = (updatedEmployee) => {
-    setEmployees(employees.map(emp => 
-      emp._id === updatedEmployee._id ? updatedEmployee : emp
+  const handleUserUpdate = (updatedUser) => {
+    setUsers(users.map(user => 
+      user._id === updatedUser._id ? updatedUser : user
     ));
-    setFilteredEmployees(filteredEmployees.map(emp => 
-      emp._id === updatedEmployee._id ? updatedEmployee : emp
+    setFilteredUsers(filteredUsers.map(user => 
+      user._id === updatedUser._id ? updatedUser : user
     ));
-    showAlert(`Employee "${updatedEmployee.empName}" updated successfully!`, 'success');
+    showAlert(`User "${updatedUser.name}" updated successfully!`, 'success');
     handleModalClose();
   };
 
   const downloadPDF = () => {
-    if (filteredEmployees.length === 0) {
-      showAlert('No employees to download', 'warning');
+    if (filteredUsers.length === 0) {
+      showAlert('No users to download', 'warning');
       return;
     }
 
     try {
-      console.log('Creating professional PDF with employee data...');
       const doc = new jsPDF('p', 'pt', 'a4');
-      const pageWidth = doc.internal.pageSize.width;
-      const pageHeight = doc.internal.pageSize.height;
       
-      // Professional Header Background
-      doc.setFillColor(0, 90, 84); // #005A54
-      doc.rect(0, 0, pageWidth, 100, 'F');
+      // Header - FABRIC FLOW title
+      doc.setFontSize(24);
+      doc.setTextColor(0, 90, 84); // #005A54
+      doc.text('FABRIC FLOW', 56.69, 756.85);
       
-      // Company Logo Area (placeholder)
-      doc.setFillColor(255, 255, 255);
-      doc.circle(60, 50, 25, 'F');
-      doc.setFontSize(12);
-      doc.setTextColor(0, 90, 84);
-      doc.text('FF', 55, 55);
+      // Subtitle
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text('User Management Report', 56.69, 714.33);
       
-      // Company Name and Title
-      doc.setFontSize(28);
-      doc.setTextColor(255, 255, 255);
-      doc.text('FABRIC FLOW', 100, 45);
-      
-      doc.setFontSize(14);
-      doc.setTextColor(220, 220, 220);
-      doc.text('Management System', 100, 65);
-      
-      // Report Information Box
+      // Generated date and time
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-GB', {
         day: '2-digit',
@@ -199,120 +188,79 @@ const EmployeeTable = () => {
         minute: '2-digit',
         second: '2-digit'
       });
+      doc.text(`Generated on: ${dateStr} at ${timeStr}`, 56.69, 685.98);
       
-      // Info box background
-      doc.setFillColor(248, 249, 250);
-      doc.roundedRect(40, 120, pageWidth - 80, 80, 5, 5, 'F');
+      // Horizontal line separator
+      doc.setDrawColor(0, 90, 84);
+      doc.setLineWidth(1.42);
+      doc.line(56.69, 671.81, 538.58, 671.81);
       
-      // Report Title
-      doc.setFontSize(20);
-      doc.setTextColor(0, 90, 84);
-      doc.text('EMPLOYEE MANAGEMENT REPORT', 60, 150);
-      
-      // Report Details
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Report Generated: ${dateStr} at ${timeStr}`, 60, 170);
-      doc.text(`Generated By: System Administrator`, 60, 185);
-      doc.text(`Total Records: ${filteredEmployees.length} employees`, 400, 170);
-      doc.text(`Report ID: EMP-${Date.now().toString().slice(-6)}`, 400, 185);
-      
-      // Prepare professional table data
-      const tableData = filteredEmployees.map((emp, index) => [
-        (index + 1).toString(),
-        emp.empName || 'N/A',
-        emp.department || emp.jobPosition || 'N/A',
-        emp.age ? emp.age.toString() : 'N/A',
-        emp.gender || 'N/A',
-        emp.empPhone || emp.phoneNo || 'N/A',
-        emp.emailAddress || emp.email || 'N/A',
-        emp.address || 'N/A'
+      // Prepare table data
+      const tableData = filteredUsers.map(user => [
+        user.name || 'N/A',
+        user.gmail || user.email || 'N/A',
+        user.phone || 'N/A',
+        user.age ? user.age.toString() : 'N/A',
+        user.role || 'user',
+        user.gender || 'N/A',
+        user.address || 'N/A'
       ]);
       
-      // Professional Table
-      autoTable(doc, {
-        startY: 230,
-        head: [['#', 'Employee Name', 'Department', 'Age', 'Gender', 'Phone Number', 'Email Address', 'Address']],
+      // Create table using autoTable
+      doc.autoTable({
+        startY: 643.46,
+        head: [['Name', 'Email', 'Phone', 'Age', 'Role', 'Gender', 'Address']],
         body: tableData,
-        theme: 'striped',
+        theme: 'grid',
         headStyles: {
           fillColor: [0, 90, 84],
           textColor: [255, 255, 255],
-          fontSize: 10,
+          fontSize: 8,
           fontStyle: 'bold',
-          halign: 'center',
-          cellPadding: 8
-        },
-        bodyStyles: {
-          fontSize: 9,
-          textColor: [60, 60, 60],
-          cellPadding: 6,
           halign: 'left'
         },
+        bodyStyles: {
+          fontSize: 8,
+          textColor: [80, 80, 80],
+          cellPadding: 5
+        },
         alternateRowStyles: {
-          fillColor: [250, 250, 250]
+          fillColor: [245, 245, 245]
         },
         columnStyles: {
-          0: { cellWidth: 30, halign: 'center' },   // #
-          1: { cellWidth: 80 },   // Name
-          2: { cellWidth: 70 },   // Department
-          3: { cellWidth: 35, halign: 'center' },   // Age
-          4: { cellWidth: 45, halign: 'center' },   // Gender
-          5: { cellWidth: 70 },   // Phone
-          6: { cellWidth: 100 },  // Email
-          7: { cellWidth: 100 }   // Address
+          0: { cellWidth: 80 },
+          1: { cellWidth: 80 },
+          2: { cellWidth: 60 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 40 },
+          5: { cellWidth: 40 },
+          6: { cellWidth: 150 }
         },
         styles: {
           overflow: 'linebreak',
-          lineWidth: 0.5,
-          lineColor: [200, 200, 200],
-          cellPadding: 6
+          cellPadding: 5,
+          lineWidth: 0.78,
+          lineColor: [200, 200, 200]
         },
-        margin: { left: 40, right: 40 },
-        didDrawPage: function (data) {
-          // Professional Footer
-          const footerY = pageHeight - 60;
-          
-          // Footer line
-          doc.setDrawColor(0, 90, 84);
-          doc.setLineWidth(2);
-          doc.line(40, footerY, pageWidth - 40, footerY);
-          
-          // Footer content
-          doc.setFontSize(8);
-          doc.setTextColor(100, 100, 100);
-          doc.text('Fabric Flow Management System | Confidential Document', 40, footerY + 20);
-          doc.text(`Page ${data.pageNumber}`, pageWidth - 80, footerY + 20);
-          doc.text(`Generated on ${dateStr}`, 40, footerY + 35);
-          doc.text('© 2025 Fabric Flow. All rights reserved.', pageWidth - 180, footerY + 35);
-        }
+        margin: { left: 56.69 }
       });
       
-      // Summary Box
-      const finalY = doc.lastAutoTable.finalY + 30;
-      if (finalY < pageHeight - 120) {
-        doc.setFillColor(0, 90, 84);
-        doc.roundedRect(40, finalY, pageWidth - 80, 60, 5, 5, 'F');
-        
-        doc.setFontSize(12);
-        doc.setTextColor(255, 255, 255);
-        doc.text('REPORT SUMMARY', 60, finalY + 25);
-        
-        doc.setFontSize(10);
-        doc.text(`Total Employees: ${filteredEmployees.length}`, 60, finalY + 45);
-        doc.text(`Departments: ${[...new Set(filteredEmployees.map(e => e.department || e.jobPosition).filter(Boolean))].length}`, 200, finalY + 45);
-        doc.text(`Average Age: ${Math.round(filteredEmployees.filter(e => e.age).reduce((sum, e) => sum + e.age, 0) / filteredEmployees.filter(e => e.age).length) || 0}`, 350, finalY + 45);
-      }
+      // Footer information
+      const finalY = doc.lastAutoTable.finalY || 500;
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('This report is generated by Fabric Flow Admin System', 56.69, finalY + 40);
+      doc.text(`Total Users: ${filteredUsers.length}`, 56.69, finalY + 68);
       
       // Save the PDF
-      const fileName = `FabricFlow_Professional_Employees_Report_${dateStr.replace(/\//g, '-')}.pdf`;
+      const fileName = `FabricFlow_Users_Report_${dateStr.replace(/\//g, '-')}.pdf`;
       doc.save(fileName);
       
-      showAlert('Professional employee report downloaded successfully!', 'success');
+      showAlert('User report downloaded successfully!', 'success');
       
     } catch (error) {
-      console.error('Error generating professional Employee PDF:', error);
-      showAlert('Failed to generate professional employee PDF report', 'error');
+      console.error('Error generating PDF:', error);
+      showAlert('Failed to generate PDF report', 'error');
     }
   };
 
@@ -323,15 +271,6 @@ const EmployeeTable = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
-  };
-
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'active': return '#4caf50';
-      case 'inactive': return '#f44336';
-      case 'pending': return '#ff9800';
-      default: return '#9c27b0';
-    }
   };
 
   const getGenderColor = (gender) => {
@@ -345,7 +284,7 @@ const EmployeeTable = () => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Loading employees...</Typography>
+        <Typography>Loading users...</Typography>
       </Box>
     );
   }
@@ -366,14 +305,14 @@ const EmployeeTable = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Avatar sx={{ bgcolor: '#005A54', mr: 2 }}>
-                  <Work />
+                  <Person />
                 </Avatar>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#005A54' }}>
-                    {employees.length}
+                    {users.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Total Employees
+                    Total Users
                   </Typography>
                 </Box>
               </Box>
@@ -384,15 +323,15 @@ const EmployeeTable = () => {
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: '#4caf50', mr: 2 }}>
-                  <Work />
+                <Avatar sx={{ bgcolor: '#2196f3', mr: 2 }}>
+                  <Person />
                 </Avatar>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#005A54' }}>
-                    {employees.filter(emp => emp.status?.toLowerCase() === 'active').length}
+                    {users.filter(u => u.gender?.toLowerCase() === 'male').length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Active Employees
+                    Male Users
                   </Typography>
                 </Box>
               </Box>
@@ -403,15 +342,15 @@ const EmployeeTable = () => {
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Avatar sx={{ bgcolor: '#ff9800', mr: 2 }}>
-                  <Business />
+                <Avatar sx={{ bgcolor: '#e91e63', mr: 2 }}>
+                  <Person />
                 </Avatar>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#005A54' }}>
-                    {[...new Set(employees.map(emp => emp.jobPosition))].length}
+                    {users.filter(u => u.gender?.toLowerCase() === 'female').length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Job Positions
+                    Female Users
                   </Typography>
                 </Box>
               </Box>
@@ -427,7 +366,7 @@ const EmployeeTable = () => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#005A54' }}>
-                    {filteredEmployees.length}
+                    {filteredUsers.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Filtered Results
@@ -443,11 +382,11 @@ const EmployeeTable = () => {
       <Card>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <Avatar sx={{ bgcolor: '#EF6869', mr: 2 }}>
-              <Work />
+            <Avatar sx={{ bgcolor: '#005A54', mr: 2 }}>
+              <Person />
             </Avatar>
             <Typography variant="h6" component="h2" sx={{ color: '#005A54', flexGrow: 1 }}>
-              Employee Management
+              User Management
             </Typography>
             <Button
               variant="outlined"
@@ -469,7 +408,7 @@ const EmployeeTable = () => {
           <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              placeholder="Search employees by name, email, position, phone..."
+              placeholder="Search users by name, email, address, phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -495,13 +434,13 @@ const EmployeeTable = () => {
             />
           </Box>
 
-          {filteredEmployees.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography variant="h6" color="text.secondary">
-                No employees found
+                No users found
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {employees.length === 0 ? 'No employees in the database' : 'Try adjusting your search criteria'}
+                {users.length === 0 ? 'No users in the database' : 'Try adjusting your search criteria'}
               </Typography>
             </Box>
           ) : (
@@ -509,17 +448,17 @@ const EmployeeTable = () => {
               <Table>
                 <TableHead sx={{ bgcolor: '#FFEED6' }}>
                   <TableRow>
-                    <TableCell><strong>Employee</strong></TableCell>
-                    <TableCell><strong>Job Details</strong></TableCell>
+                    <TableCell><strong>User</strong></TableCell>
                     <TableCell><strong>Contact</strong></TableCell>
                     <TableCell><strong>Personal Info</strong></TableCell>
+                    <TableCell><strong>Address</strong></TableCell>
                     <TableCell><strong>Actions</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredEmployees.map((employee, index) => (
+                  {filteredUsers.map((user, index) => (
                     <TableRow 
-                      key={employee._id} 
+                      key={user._id} 
                       sx={{ 
                         '&:hover': { bgcolor: 'rgba(0, 90, 84, 0.04)' },
                         backgroundColor: index % 2 === 0 ? '#fafafa' : 'white'
@@ -527,82 +466,61 @@ const EmployeeTable = () => {
                     >
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ bgcolor: '#EF6869', mr: 2 }}>
-                            {getInitials(employee.empName)}
+                          <Avatar sx={{ bgcolor: '#005A54', mr: 2 }}>
+                            {getInitials(user.name)}
                           </Avatar>
                           <Box>
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                              {employee.empName}
+                              {user.name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              ID: {employee.empId || employee._id?.slice(-6)}
+                              ID: {user._id?.slice(-6)}
                             </Typography>
                           </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                            <Business sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
-                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                              {employee.jobPosition || 'N/A'}
-                            </Typography>
-                          </Box>
-                          {employee.status && (
-                            <Chip 
-                              label={employee.status} 
-                              size="small" 
-                              sx={{ 
-                                bgcolor: getStatusColor(employee.status),
-                                color: 'white',
-                                fontSize: '0.75rem'
-                              }} 
-                            />
-                          )}
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                             <Email sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
-                            <Typography variant="body2">{employee.emailAddress || 'N/A'}</Typography>
+                            <Typography variant="body2">{user.gmail || 'N/A'}</Typography>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Phone sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
-                            <Typography variant="body2">{employee.empPhone || 'N/A'}</Typography>
+                            <Typography variant="body2">{user.phone || 'N/A'}</Typography>
                           </Box>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                            <Typography variant="body2" sx={{ mr: 1 }}>Age: {employee.age || 'N/A'}</Typography>
-                            {employee.gender && (
+                            <Typography variant="body2" sx={{ mr: 1 }}>Age: {user.age || 'N/A'}</Typography>
+                            {user.gender && (
                               <Chip 
-                                label={employee.gender} 
+                                label={user.gender} 
                                 size="small" 
                                 sx={{ 
-                                  bgcolor: getGenderColor(employee.gender),
+                                  bgcolor: getGenderColor(user.gender),
                                   color: 'white',
                                   fontSize: '0.75rem'
                                 }} 
                               />
                             )}
                           </Box>
-                          {employee.dob && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                              <Cake sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
-                              <Typography variant="body2">{formatDate(employee.dob)}</Typography>
-                            </Box>
-                          )}
-                          {employee.address && (
+                          {user.dob && (
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Home sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
-                              <Typography variant="body2" sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {employee.address}
-                              </Typography>
+                              <Cake sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
+                              <Typography variant="body2">{formatDate(user.dob)}</Typography>
                             </Box>
                           )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Home sx={{ fontSize: 16, mr: 1, color: '#005A54' }} />
+                          <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {user.address || 'N/A'}
+                          </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
@@ -610,25 +528,25 @@ const EmployeeTable = () => {
                           <Tooltip title="View Details">
                             <IconButton 
                               size="small" 
-                              onClick={() => handleView(employee)}
+                              onClick={() => handleView(user)}
                               sx={{ color: '#005A54' }}
                             >
                               <Visibility fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Edit Employee">
+                          <Tooltip title="Edit User">
                             <IconButton 
                               size="small" 
-                              onClick={() => handleEdit(employee)}
+                              onClick={() => handleEdit(user)}
                               sx={{ color: '#ff9800' }}
                             >
                               <Edit fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete Employee">
+                          <Tooltip title="Delete User">
                             <IconButton 
                               size="small" 
-                              onClick={() => handleDeleteClick(employee)}
+                              onClick={() => handleDeleteClick(user)}
                               sx={{ color: '#EF6869' }}
                             >
                               <Delete fontSize="small" />
@@ -657,7 +575,7 @@ const EmployeeTable = () => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete employee "{employeeToDelete?.empName}"? This action cannot be undone.
+            Are you sure you want to delete user "{userToDelete?.name}"? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -670,16 +588,16 @@ const EmployeeTable = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Employee Modal for View/Edit */}
-      <EmployeeViewEditModal
+      {/* User Modal for View/Edit */}
+      <UserViewEditModal
         open={modalOpen}
         onClose={handleModalClose}
-        employee={selectedEmployee}
+        user={selectedUser}
         mode={modalMode}
-        onEmployeeUpdate={handleEmployeeUpdate}
+        onUserUpdate={handleUserUpdate}
       />
     </Box>
   );
 };
 
-export default EmployeeTable;
+export default UserTable;
