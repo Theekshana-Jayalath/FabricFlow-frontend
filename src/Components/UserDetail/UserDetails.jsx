@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Nav from "../Nav/Nav.jsx";
 import UserDisplay from "../UserDisplay/UserDisplay.jsx";
 import axios from "axios";
 
@@ -50,33 +49,26 @@ function UserDetails() {
     link.setAttribute("href", url);
     link.setAttribute("download", "user_details.csv");
     link.style.visibility = "hidden";
-
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
   };
 
-  const convertToCSV = (usersArray) => {
-    if (!usersArray || usersArray.length === 0) return "";
+  const convertToCSV = (data) => {
+    if (!data.length) return "";
 
-    const headers = Object.keys(usersArray[0]).join(",");
-    const rows = usersArray
-      .map((user) =>
-        Object.values(user)
-          .map((value) =>
-            typeof value === "string" ? `"${value.replace(/"/g, '""')}"` : value
-          )
-          .join(",")
-      )
-      .join("\n");
+    const headers = Object.keys(data[0]);
+    const csvHeaders = headers.join(",");
 
-    return `${headers}\n${rows}`;
+    const csvRows = data.map((row) =>
+      headers.map((header) => `"${row[header] || ""}"`).join(",")
+    );
+
+    return [csvHeaders, ...csvRows].join("\n");
   };
 
   return (
     <div>
-      <Nav />
       <div className="p-5">
         <div className="flex gap-3 mb-5">
           <input
@@ -84,27 +76,45 @@ function UserDetails() {
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border p-2 rounded flex-1 max-w-md"
+            className="border border-gray-300 rounded px-3 py-2 flex-1"
           />
           <button
             onClick={handleSearch}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#EF6869] transition-colors"
           >
             Search
           </button>
           <button
             onClick={downloadUserDetails}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className="bg-[#EF6869] text-white px-4 py-2 rounded hover:bg-[#005A54] transition-colors"
           >
-            Download User Details
+            Download CSV
           </button>
         </div>
 
-        {users && users.length > 0 ? (
-          users.map((user, i) => <UserDisplay key={i} user={user} />)
-        ) : (
-          <p>No users found</p>
-        )}
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-[#005A54] to-[#EF6869] text-white p-8 rounded-lg mb-6">
+          <h1 className="text-3xl font-bold mb-2">Welcome to FabricFlow</h1>
+          <p className="text-lg opacity-90">Your complete apparel management solution</p>
+        </div>
+
+        {/* User Display */}
+        <div className="users-container">
+          {users && users.length > 0 ? (
+            users.map((user, i) => (
+              <div key={i}>
+                <UserDisplay user={user} />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No users found or backend not connected</p>
+              <p className="text-sm text-gray-400 mt-2">
+                Make sure your backend server is running on http://localhost:5000
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Dashboard,
-  Description,
-  Widgets,
-  TableChart,
-  Map,
-  BarChart,
-  People,
+  AdminPanelSettings,
+  AccountBalance,
+  Inventory,
+  TrendingUp,
   ExpandLess,
   ExpandMore,
-  TableRows,
-  DataObject
+  People,
+  Assessment,
+  LocalShipping,
+  Analytics,
+  ShoppingCart
 } from '@mui/icons-material';
 import {
   Drawer,
@@ -28,8 +29,11 @@ import {
 
 const AdminSidebar = ({ drawerWidth = 280 }) => {
   const location = useLocation();
-  const [pagesOpen, setPagesOpen] = useState(true);
-  const [tablesOpen, setTablesOpen] = useState(true);
+  const [administrationOpen, setAdministrationOpen] = useState(false);
+  const [ordersOpen, setOrdersOpen] = useState(false);
+  const [financeOpen, setFinanceOpen] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [salesDistributionOpen, setSalesDistributionOpen] = useState(false);
 
   const menuItems = [
     {
@@ -38,52 +42,69 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       path: '/admin/dashboard'
     },
     {
-      text: 'Pages',
-      icon: <Description />,
+      text: 'Administration',
+      icon: <AdminPanelSettings />,
       hasDropdown: true,
-      isOpen: pagesOpen,
-      onClick: () => setPagesOpen(!pagesOpen),
+      isOpen: administrationOpen,
+      onClick: () => setAdministrationOpen(!administrationOpen),
       subItems: [
-        { text: 'User Management', path: '/admin/users' },
-        { text: 'Employee Management', path: '/admin/employees' },
+        { text: 'User Management', path: '/admin/users', icon: <People /> },
+        { text: 'Employee Management', path: '/admin/employees', icon: <People /> },
+        { text: 'System Settings', path: '/admin/settings', icon: <AdminPanelSettings /> }
       ]
     },
     {
-      text: 'Components',
-      icon: <Widgets />,
-      path: '/admin/components'
-    },
-    {
-      text: 'Forms',
-      icon: <Description />,
-      path: '/admin/forms'
-    },
-    {
-      text: 'Tables',
-      icon: <TableChart />,
+      text: 'Orders',
+      icon: <ShoppingCart />,
       hasDropdown: true,
-      isOpen: tablesOpen,
-      onClick: () => setTablesOpen(!tablesOpen),
+      isOpen: ordersOpen,
+      onClick: () => setOrdersOpen(!ordersOpen),
       subItems: [
-        { text: 'Regular Tables', path: '/admin/tables/regular', icon: 'RT' },
-        { text: 'Extended Tables', path: '/admin/tables/extended', icon: 'ET' },
-        { text: 'DataTables.Net', path: '/admin/tables/datatables', icon: 'DT' }
+        { text: 'All Orders', path: '/admin/orders/all', icon: <ShoppingCart /> },
+        { text: 'Pending Orders', path: '/admin/orders/pending', icon: <ShoppingCart /> },
+        { text: 'Processing', path: '/admin/orders/processing', icon: <ShoppingCart /> },
+        { text: 'Completed Orders', path: '/admin/orders/completed', icon: <ShoppingCart /> }
       ]
     },
     {
-      text: 'Maps',
-      icon: <Map />,
-      path: '/admin/maps'
+      text: 'Finance',
+      icon: <AccountBalance />,
+      hasDropdown: true,
+      isOpen: financeOpen,
+      onClick: () => setFinanceOpen(!financeOpen),
+      subItems: [
+        { text: 'Financial Overview', path: '/admin/finance/overview', icon: <Assessment /> },
+        { text: 'Revenue Reports', path: '/admin/finance/revenue', icon: <TrendingUp /> },
+        { text: 'Expense Tracking', path: '/admin/finance/expenses', icon: <AccountBalance /> },
+        { text: 'Budget Planning', path: '/admin/finance/budget', icon: <Analytics /> }
+      ]
     },
     {
-      text: 'Widgets',
-      icon: <Widgets />,
-      path: '/admin/widgets'
+      text: 'Inventory',
+      icon: <Inventory />,
+      hasDropdown: true,
+      isOpen: inventoryOpen,
+      onClick: () => setInventoryOpen(!inventoryOpen),
+      subItems: [
+        { text: 'Stock Management', path: '/admin/inventory/stock', icon: <Inventory /> },
+        { text: 'Material Tracking', path: '/admin/inventory/materials', icon: <Inventory /> },
+        { text: 'Quality Control', path: '/admin/inventory/quality', icon: <Assessment /> },
+        { text: 'Supplier Management', path: '/admin/inventory/suppliers', icon: <People /> }
+      ]
     },
     {
-      text: 'Charts',
-      icon: <BarChart />,
-      path: '/admin/charts'
+      text: 'Sales & Distribution',
+      icon: <TrendingUp />,
+      hasDropdown: true,
+      isOpen: salesDistributionOpen,
+      onClick: () => setSalesDistributionOpen(!salesDistributionOpen),
+      subItems: [
+        { text: 'Sales Analytics', path: '/admin/sales/analytics', icon: <Analytics /> },
+        { text: 'Customer Management', path: '/admin/sales/customers', icon: <People /> },
+        { text: 'Order Processing', path: '/admin/sales/orders', icon: <ShoppingCart /> },
+        { text: 'Distribution Centers', path: '/admin/distribution/centers', icon: <LocalShipping /> },
+        { text: 'Logistics Tracking', path: '/admin/distribution/tracking', icon: <LocalShipping /> }
+      ]
     }
   ];
 

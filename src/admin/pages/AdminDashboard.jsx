@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   Box,
   Grid,
@@ -28,7 +30,8 @@ import {
   Person,
   Refresh,
   ArrowUpward,
-  ArrowDownward
+  ArrowDownward,
+  Logout
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -50,6 +53,14 @@ import {
 import axios from 'axios';
 
 const AdminDashboard = () => {
+  const { logout, getDisplayName } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/', { replace: true });
+  };
+  
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalEmployees: 0,
@@ -63,6 +74,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [departmentData, setDepartmentData] = useState([]);
 
   // Sample chart data
   const revenueData = [
@@ -78,13 +90,6 @@ const AdminDashboard = () => {
     { name: 'Male', value: 0, color: '#005A54' },
     { name: 'Female', value: 0, color: '#EF6869' },
     { name: 'Other', value: 0, color: '#FFEED6' }
-  ];
-
-  const departmentData = [
-    { name: 'Production', employees: 45, color: '#005A54' },
-    { name: 'Quality Control', employees: 32, color: '#EF6869' },
-    { name: 'Administration', employees: 28, color: '#4CAF50' },
-    { name: 'Sales', employees: 35, color: '#FF9800' }
   ];
 
   // Fetch statistics
@@ -137,6 +142,24 @@ const AdminDashboard = () => {
       genderData[0].value = maleUsers;
       genderData[1].value = femaleUsers;
       genderData[2].value = users.length - maleUsers - femaleUsers;
+
+      // Calculate real department distribution from employee data
+      const departmentCounts = {};
+      const colors = ['#005A54', '#EF6869', '#4CAF50', '#FF9800', '#9C27B0', '#FF5722'];
+      
+      employees.forEach(emp => {
+        const dept = emp.department || emp.jobPosition || 'Other';
+        departmentCounts[dept] = (departmentCounts[dept] || 0) + 1;
+      });
+
+      const realDepartmentData = Object.entries(departmentCounts).map(([name, count], index) => ({
+        name,
+        employees: count,
+        value: count, // For pie chart
+        color: colors[index % colors.length]
+      }));
+
+      setDepartmentData(realDepartmentData);
 
       // Generate recent activity from real data
       const activity = generateRecentActivity(users, employees);
@@ -348,37 +371,71 @@ const AdminDashboard = () => {
         >
           <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Box>
-              <Typography variant="h4" component="h1" sx={{ 
+              <Typography variant="h3" component="h1" sx={{ 
                 color: '#005A54', 
                 fontWeight: 'bold',
                 mb: 1,
-                fontSize: { xs: '1.8rem', sm: '2.5rem' }
+                background: 'linear-gradient(45deg, #005A54 30%, #EF6869 90%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: { xs: '1.8rem', sm: '2.5rem', md: '3rem' }
               }}>
-                Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'} 👋
+                Welcome to Admin Dashboard
               </Typography>
-              <Typography variant="subtitle1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-                Welcome back! Here's what's happening with your business today.
+              <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>
+                Manage your FabricFlow system efficiently
               </Typography>
             </Box>
-            <Tooltip title="Refresh Dashboard">
-              <IconButton 
-                onClick={handleRefresh}
-                disabled={refreshing}
-                sx={{ 
-                  bgcolor: '#005A54',
-                  color: 'white',
-                  '&:hover': { bgcolor: '#007B73' },
-                  '&:disabled': { bgcolor: 'rgba(0, 90, 84, 0.3)' }
-                }}
-              >
-                <motion.div
-                  animate={{ rotate: refreshing ? 360 : 0 }}
-                  transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
+            
+            {/* Logout Button */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
+                <Typography variant="body2" color="text.secondary">
+                  Signed in as
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 600, color: '#005A54' }}>
+                  {getDisplayName()}
+                </Typography>
+              </Box>
+              <Tooltip title="Refresh Dashboard">
+                <IconButton 
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  sx={{ 
+                    bgcolor: '#EF6869',
+                    color: 'white',
+                    '&:hover': { bgcolor: '#d45456' },
+                    '&:disabled': { bgcolor: 'rgba(239, 104, 105, 0.3)' }
+                  }}
                 >
-                  <Refresh />
-                </motion.div>
-              </IconButton>
-            </Tooltip>
+                  <motion.div
+                    animate={{ rotate: refreshing ? 360 : 0 }}
+                    transition={{ duration: 1, repeat: refreshing ? Infinity : 0, ease: "linear" }}
+                  >
+                    <Refresh />
+                  </motion.div>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Logout">
+                <Button
+                  onClick={handleLogout}
+                  variant="outlined"
+                  startIcon={<Logout />}
+                  sx={{
+                    color: '#005A54',
+                    borderColor: '#005A54',
+                    '&:hover': {
+                      backgroundColor: '#005A54',
+                      color: 'white',
+                      borderColor: '#005A54'
+                    }
+                  }}
+                >
+                  Logout
+                </Button>
+              </Tooltip>
+            </Box>
           </Box>
         </motion.div>
 
@@ -646,13 +703,24 @@ const AdminDashboard = () => {
               }}>
                 <CardContent>
                   <Typography variant="h6" component="h2" sx={{ mb: 2, color: '#005A54', fontWeight: 'bold' }}>
-                    Department Overview
+                    Employee Distribution by Department
                   </Typography>
                   <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={departmentData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="name" stroke="#666" />
-                      <YAxis stroke="#666" />
+                    <PieChart>
+                      <Pie
+                        data={departmentData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="employees"
+                      >
+                        {departmentData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
                       <RechartsTooltip 
                         contentStyle={{ 
                           backgroundColor: 'white', 
@@ -661,9 +729,18 @@ const AdminDashboard = () => {
                           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                         }}
                       />
-                      <Bar dataKey="employees" fill="#005A54" radius={[4, 4, 0, 0]} />
-                    </BarChart>
+                    </PieChart>
                   </ResponsiveContainer>
+                  
+                  {/* Legend */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+                    {departmentData.map((dept, index) => (
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ width: 12, height: 12, bgcolor: dept.color, borderRadius: '50%' }} />
+                        <Typography variant="caption">{dept.name} ({dept.employees})</Typography>
+                      </Box>
+                    ))}
+                  </Box>
                 </CardContent>
               </Card>
             </motion.div>
