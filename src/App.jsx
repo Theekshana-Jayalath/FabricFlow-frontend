@@ -26,6 +26,7 @@ import UserTable from "./admin/components/UserTable";
 import EmployeeTable from "./admin/components/EmployeeTable";
 import Charts from "./admin/components/Charts";
 import Widgets from "./admin/components/Widgets";
+import AllDrivers from "./admin/pages/AllDrivers";
 
 function App() {
   return (
@@ -161,6 +162,10 @@ function AppContent() {
           <Route 
             path="widgets" 
             element={<Widgets />} 
+          />
+          <Route 
+            path="sales/drivers" 
+            element={<AllDrivers />} 
           />
         </Route>
 

@@ -99,7 +99,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: salesDistributionOpen,
       onClick: () => setSalesDistributionOpen(!salesDistributionOpen),
       subItems: [
-        { text: 'Sales Analytics', path: '/admin/sales/analytics', icon: <Analytics /> },
+  { text: 'All Drivers', path: '/admin/sales/drivers', icon: <Analytics /> },
         { text: 'Customer Management', path: '/admin/sales/customers', icon: <People /> },
         { text: 'Order Processing', path: '/admin/sales/orders', icon: <ShoppingCart /> },
         { text: 'Distribution Centers', path: '/admin/distribution/centers', icon: <LocalShipping /> },
