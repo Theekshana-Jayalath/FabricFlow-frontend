@@ -1,14 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 function EmployeeDashboard() {
   const { user, getDisplayName, logout } = useAuth();
   const navigate = useNavigate();
+  const [selectedJobPosition, setSelectedJobPosition] = useState('');
+
+  // Job positions from signup form
+  const jobPositions = [
+    { value: '', label: 'All Positions' },
+    { value: 'Production Manager', label: 'Production Manager' },
+    { value: 'Quality Controller', label: 'Quality Controller' },
+    { value: 'Designer', label: 'Designer' },
+    { value: 'Supervisor', label: 'Supervisor' },
+    { value: 'Operator', label: 'Operator' },
+    { value: 'Maintenance', label: 'Maintenance' },
+    { value: 'Driver', label: 'Driver' }
+  ];
 
   const handleLogout = () => {
     logout();
     navigate('/', { replace: true });
+  };
+
+  const handleJobPositionChange = (e) => {
+    setSelectedJobPosition(e.target.value);
+    // Here you can add logic to filter content based on selected job position
+    console.log('Selected job position:', e.target.value);
   };
 
   return (
@@ -43,6 +62,66 @@ function EmployeeDashboard() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Job Position Filter */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Filter by Job Position</h2>
+              <p className="text-sm text-gray-600">Select a job position to view relevant tasks and information</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <select
+                  value={selectedJobPosition}
+                  onChange={handleJobPositionChange}
+                  className="appearance-none bg-white border-2 border-gray-300 hover:border-[#005A54] focus:border-[#005A54] focus:ring-2 focus:ring-[#005A54]/20 focus:outline-none px-4 py-3 pr-10 rounded-lg font-medium text-gray-700 min-w-[200px] transition-all duration-200"
+                >
+                  {jobPositions.map((position) => (
+                    <option key={position.value} value={position.value}>
+                      {position.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              {selectedJobPosition && (
+                <button
+                  onClick={() => setSelectedJobPosition('')}
+                  className="bg-[#EF6869] hover:bg-[#EF6869]/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <span>Clear Filter</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Selected Position Info */}
+          {selectedJobPosition && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-[#005A54]/10 to-[#EF6869]/10 rounded-lg border-l-4 border-[#005A54]">
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-[#005A54] rounded-full flex items-center justify-center mr-3">
+                  <span className="text-white text-sm">👷</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    Viewing content for: <span className="text-[#005A54]">{selectedJobPosition}</span>
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Tasks and information relevant to this position are highlighted below
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Stats */}
@@ -106,14 +185,25 @@ function EmployeeDashboard() {
             <div className="p-6">
               <div className="space-y-4">
                 {[
-                  { id: 1, task: 'Cut fabric for Order #1234', priority: 'High', deadline: '2 hours' },
-                  { id: 2, task: 'Quality check for Batch #567', priority: 'Medium', deadline: '4 hours' },
-                  { id: 3, task: 'Package finished garments', priority: 'Low', deadline: 'Tomorrow' }
-                ].map((task) => (
-                  <div key={task.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  { id: 1, task: 'Cut fabric for Order #1234', priority: 'High', deadline: '2 hours', position: 'Operator' },
+                  { id: 2, task: 'Quality check for Batch #567', priority: 'Medium', deadline: '4 hours', position: 'Quality Controller' },
+                  { id: 3, task: 'Package finished garments', priority: 'Low', deadline: 'Tomorrow', position: 'Operator' },
+                  { id: 4, task: 'Design review for new collection', priority: 'High', deadline: '1 day', position: 'Designer' },
+                  { id: 5, task: 'Supervise production line A', priority: 'Medium', deadline: '3 hours', position: 'Supervisor' },
+                  { id: 6, task: 'Equipment maintenance check', priority: 'High', deadline: '4 hours', position: 'Maintenance' },
+                  { id: 7, task: 'Deliver materials to warehouse', priority: 'Medium', deadline: '2 days', position: 'Driver' },
+                  { id: 8, task: 'Production planning meeting', priority: 'High', deadline: '1 hour', position: 'Production Manager' }
+                ].filter(task => !selectedJobPosition || task.position === selectedJobPosition).map((task) => (
+                  <div key={task.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-[#005A54] transition-colors">
                     <div>
                       <p className="font-medium text-gray-900">{task.task}</p>
-                      <p className="text-sm text-gray-600">Deadline: {task.deadline}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <p className="text-sm text-gray-600">Deadline: {task.deadline}</p>
+                        <span className="text-gray-400">•</span>
+                        <p className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                          {task.position}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -123,12 +213,30 @@ function EmployeeDashboard() {
                       }`}>
                         {task.priority}
                       </span>
-                      <button className="text-[#005A54] hover:text-[#EF6869] text-sm font-medium">
+                      <button className="text-[#005A54] hover:text-[#EF6869] text-sm font-medium transition-colors">
                         Start
                       </button>
                     </div>
                   </div>
                 ))}
+                
+                {/* No tasks message when filtered */}
+                {selectedJobPosition && [
+                  { id: 1, task: 'Cut fabric for Order #1234', priority: 'High', deadline: '2 hours', position: 'Operator' },
+                  { id: 2, task: 'Quality check for Batch #567', priority: 'Medium', deadline: '4 hours', position: 'Quality Controller' },
+                  { id: 3, task: 'Package finished garments', priority: 'Low', deadline: 'Tomorrow', position: 'Operator' },
+                  { id: 4, task: 'Design review for new collection', priority: 'High', deadline: '1 day', position: 'Designer' },
+                  { id: 5, task: 'Supervise production line A', priority: 'Medium', deadline: '3 hours', position: 'Supervisor' },
+                  { id: 6, task: 'Equipment maintenance check', priority: 'High', deadline: '4 hours', position: 'Maintenance' },
+                  { id: 7, task: 'Deliver materials to warehouse', priority: 'Medium', deadline: '2 days', position: 'Driver' },
+                  { id: 8, task: 'Production planning meeting', priority: 'High', deadline: '1 hour', position: 'Production Manager' }
+                ].filter(task => task.position === selectedJobPosition).length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="text-4xl mb-2">📋</div>
+                    <p className="font-medium">No tasks found for {selectedJobPosition}</p>
+                    <p className="text-sm">Try selecting a different job position or clear the filter</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

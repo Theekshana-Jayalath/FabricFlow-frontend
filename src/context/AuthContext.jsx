@@ -172,14 +172,31 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // TODO: Replace with actual API call
       console.log('Updating profile with:', updatedData);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Update user data
-      const updatedUser = { ...user, ...updatedData };
+      // Make API call to update user profile
+      const response = await fetch(`http://localhost:5000/api/users/${user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('fabricflow_token')}` // if you have JWT auth
+        },
+        body: JSON.stringify({
+          name: updatedData.name,
+          gmail: updatedData.email,
+          age: updatedData.age,
+          address: updatedData.address,
+          phone: updatedData.phone,
+          gender: updatedData.gender
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const result = await response.json();
+      const updatedUser = result.user;
       
       // Store in localStorage
       localStorage.setItem('fabricflow_user', JSON.stringify(updatedUser));

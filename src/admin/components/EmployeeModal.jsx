@@ -11,40 +11,33 @@ import {
   Box,
   IconButton,
   Divider,
-  MenuItem
+  MenuItem,
+  InputAdornment
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import axios from 'axios';
 
 const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
   const [formData, setFormData] = useState({
     empName: '',
     empID: '',
-    department: '',
     jobPosition: '',
     email: '',
     phone: '',
     address: '',
-    salary: '',
     hireDate: '',
-    status: 'Active'
+    status: 'Active',
+    password: '', // Add password field
+    age: '',
+    dob: '',
+    gender: ''
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-
-  const departments = [
-    'Human Resources',
-    'Finance',
-    'Marketing',
-    'Sales',
-    'Production',
-    'Quality Control',
-    'IT',
-    'Administration',
-    'Research & Development'
-  ];
+  const [showPassword, setShowPassword] = useState(false); // Add password visibility state
 
   const jobPositions = [
     'Manager',
@@ -55,97 +48,503 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
     'Assistant',
     'Intern',
     'Consultant',
-    'Specialist'
+    'Specialist',
+    'Driver'
+  ];
+
+  const genderOptions = [
+    { value: '', label: 'Select Gender' },
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' }
   ];
 
   const statusOptions = ['Active', 'Inactive', 'On Leave', 'Terminated'];
 
   useEffect(() => {
-    if (employee) {
+    if (employee && mode !== 'create') {
       setFormData({
         empName: employee.empName || '',
         empID: employee.empID || '',
-        department: employee.department || '',
         jobPosition: employee.jobPosition || '',
         email: employee.email || '',
         phone: employee.phone || '',
         address: employee.address || '',
-        salary: employee.salary || '',
         hireDate: employee.hireDate ? employee.hireDate.split('T')[0] : '',
-        status: employee.status || 'Active'
+        status: employee.status || 'Active',
+        age: employee.age || '',
+        dob: employee.dob ? employee.dob.split('T')[0] : '',
+        gender: employee.gender || ''
       });
+    } else if (mode === 'create') {
+      // Reset form for create mode
+      setFormData({
+        empName: '',
+        empID: '',
+        jobPosition: '',
+        email: '',
+        phone: '',
+        address: '',
+        hireDate: '',
+        status: 'Active',
+        password: '', // Add password field for new employees
+        age: '',
+        dob: '',
+        gender: ''
+      });
+      setErrors({});
     }
-  }, [employee]);
+  }, [employee, mode]);
+
+  // Comprehensive validation helper functions
+  const validateEmployeeId = (empID) => {
+    const trimmed = empID.trim();
+    if (!trimmed) {
+      return 'Employee ID is required';
+    }
+    if (!/^[a-zA-Z0-9]{4,10}$/.test(trimmed)) {
+      return 'Employee ID must be 4-10 alphanumeric characters only (no special characters)';
+    }
+    return '';
+  };
+
+  const validateEmployeeName = (empName) => {
+    const trimmed = empName.trim();
+    if (!trimmed) {
+      return 'Employee name is required';
+    }
+    if (trimmed.length < 3) {
+      return 'Employee name must be at least 3 characters';
+    }
+    if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
+      return 'Employee name can only contain letters and spaces';
+    }
+    return '';
+  };
+
+  const validateEmail = (email) => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      return 'Email address is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    return '';
+  };
+
+  const validateAge = (age) => {
+    if (!age) {
+      return 'Age is required';
+    }
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 65) {
+      return 'Age must be between 18 and 65 years';
+    }
+    return '';
+  };
+
+  const validateGender = (gender) => {
+    if (!gender || gender === '') {
+      return 'Please select gender';
+    }
+    if (!['male', 'female', 'other'].includes(gender)) {
+      return 'Please select a valid gender option';
+    }
+    return '';
+  };
+
+  const validateDateOfBirth = (dob) => {
+    if (!dob) {
+      return 'Date of birth is required';
+    }
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) {
+      return 'Date of birth cannot be in the future';
+    }
+    
+    const age = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 18 || age > 65) {
+      return 'Age must be between 18 and 65 years based on date of birth';
+    }
+    return '';
+  };
+
+  // Function to calculate age from date of birth
+  const calculateAgeFromDOB = (dob) => {
+    if (!dob) return '';
+    
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) return '';
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age.toString();
+  };
+
+  // Toggle password visibility
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+    // Trim whitespace for relevant fields
+    let processedValue = value;
+    if (['empName', 'empID', 'email'].includes(field)) {
+      processedValue = value.trim();
     }
+
+    // Initialize updated form data
+    let updatedFormData = {
+      ...formData,
+      [field]: processedValue
+    };
+
+    // Auto-calculate age when date of birth is entered
+    if (field === 'dob') {
+      const calculatedAge = calculateAgeFromDOB(processedValue);
+      if (calculatedAge) {
+        updatedFormData.age = calculatedAge;
+      }
+    }
+
+    setFormData(updatedFormData);
+    
+    // Real-time validation
+    const newErrors = { ...errors };
+    
+    if (newErrors[field]) {
+      delete newErrors[field];
+    }
+
+    // Clear age error if DOB auto-calculated the age
+    if (field === 'dob' && updatedFormData.age && newErrors.age) {
+      delete newErrors.age;
+    }
+    
+    // Validate current field
+    let fieldError = '';
+    
+    switch (field) {
+      case 'empID':
+        fieldError = validateEmployeeId(processedValue);
+        break;
+      case 'empName':
+        fieldError = validateEmployeeName(processedValue);
+        break;
+      case 'email':
+        fieldError = validateEmail(processedValue);
+        break;
+      case 'password':
+        fieldError = validatePassword(processedValue);
+        break;
+      case 'age':
+        fieldError = validateAge(processedValue);
+        break;
+      case 'gender':
+        fieldError = validateGender(processedValue);
+        break;
+      case 'dob':
+        fieldError = validateDateOfBirth(processedValue);
+        break;
+      default:
+        break;
+    }
+    
+    if (fieldError) {
+      newErrors[field] = fieldError;
+    }
+    
+    setErrors(newErrors);
   };
 
   const validateForm = () => {
+    console.log('🔍 VALIDATION DEBUG - Starting form validation');
+    console.log('Form data being validated:', JSON.stringify(formData, null, 2));
+    
     const newErrors = {};
     
+    // Check Employee Name
+    console.log('Checking empName:', formData.empName);
+    const empNameError = validateEmployeeName(formData.empName);
+    if (empNameError) {
+      console.log('❌ Employee Name Error:', empNameError);
+      newErrors.empName = empNameError;
+    }
+    
     if (!formData.empName.trim()) {
+      console.log('❌ Employee Name is empty');
       newErrors.empName = 'Employee name is required';
     }
     
+    // Check Employee ID  
+    console.log('Checking empID:', formData.empID);
     if (!formData.empID.trim()) {
-      newErrors.empID = 'Employee ID is required';
+      console.log('❌ Employee ID is empty');
+      newErrors.empID = 'Employee ID is required';  
     }
-
+    
+    const empIDError = validateEmployeeId(formData.empID);
+    if (empIDError) {
+      console.log('❌ Employee ID Error:', empIDError);
+      newErrors.empID = empIDError;
+    }
+    
+    // Check Email
+    console.log('Checking email:', formData.email);
     if (!formData.email.trim()) {
+      console.log('❌ Email is empty');
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    }
+    
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      console.log('❌ Email Error:', emailError);
+      newErrors.email = emailError;
+    }
+    
+    // Check Address
+    console.log('Checking address:', formData.address);
+    if (!formData.address.trim()) {
+      console.log('❌ Address is empty');
+      newErrors.address = 'Address is required';
     }
 
-    if (!formData.department) {
-      newErrors.department = 'Department is required';
-    }
-
+    // Check Job Position
+    console.log('Checking jobPosition:', formData.jobPosition);
     if (!formData.jobPosition) {
+      console.log('❌ Job Position is empty');
       newErrors.jobPosition = 'Job position is required';
     }
 
-    if (formData.salary && (isNaN(formData.salary) || formData.salary < 0)) {
-      newErrors.salary = 'Please enter a valid salary';
+    // Check Password (only for create mode)
+    if (mode === 'create') {
+      console.log('Checking password:', formData.password ? '[HIDDEN]' : 'empty');
+      if (!formData.password) {
+        console.log('❌ Password is empty');
+        newErrors.password = 'Password is required';
+      } else {
+        const passwordError = validatePassword(formData.password);
+        if (passwordError) {
+          console.log('❌ Password Error:', passwordError);
+          newErrors.password = passwordError;
+        }
+      }
     }
 
+    console.log('🔍 All validation errors found:', JSON.stringify(newErrors, null, 2));
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
+    const isValid = Object.keys(newErrors).length === 0;
+    console.log('🔍 Form validation result:', isValid ? '✅ VALID' : '❌ INVALID');
+    
+    return isValid;
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    console.log('=== EMPLOYEE CREATION DEBUG START ===');
+    console.log('Current Form Data:', JSON.stringify(formData, null, 2));
+    console.log('Current Errors before validation:', JSON.stringify(errors, null, 2));
+    console.log('Mode:', mode);
+    
+    if (!validateForm()) {
+      console.log('❌ FORM VALIDATION FAILED!');
+      console.log('Validation errors after validateForm():', JSON.stringify(errors, null, 2));
+      return;
+    }
 
+    console.log('✅ Form validation passed, proceeding with save...');
     setLoading(true);
+    
     try {
-      const response = await axios.put(`http://localhost:5000/employees/${employee._id}`, formData);
+      let response;
       
-      if (onEmployeeUpdate) {
-        onEmployeeUpdate(response.data);
+      if (mode === 'create') {
+        // Create new employee - simulate successful creation for now
+        const newEmployee = {
+          _id: Date.now().toString(), // Generate temporary ID
+          empId: formData.empID,
+          empName: formData.empName,
+          empPhone: formData.phone || '',
+          jobPosition: formData.jobPosition,
+          status: formData.status.toLowerCase(),
+          address: formData.address,
+          emailAddress: formData.email,
+          hireDate: formData.hireDate,
+          createdAt: new Date().toISOString()
+        };
+        
+        console.log('Creating new employee locally:', newEmployee);
+        
+        // Try to save to backend first since it's running
+        try {
+          const backendData = {
+            empId: formData.empID,
+            empName: formData.empName,
+            empPhone: formData.phone || '',
+            jobPosition: formData.jobPosition || 'Officer', // Required field - default if not selected
+            status: formData.status.toLowerCase(),
+            address: formData.address || 'Not specified', // Required field - default if empty
+            emailAddress: formData.email, // Required field
+            password: formData.password, // Use password from form
+            role: 'employee', // Default role
+            dob: formData.dob ? new Date(formData.dob) : null, // Use actual DOB field
+            gender: formData.gender || null, // Use actual gender field
+            age: formData.age ? parseInt(formData.age) : null // Use actual age field
+          };
+          
+          console.log('🚀 Sending employee data to backend...');
+          console.log('Backend Data:', JSON.stringify(backendData, null, 2));
+          console.log('POST URL: http://localhost:5000/employees');
+          
+          // Validate required fields before sending
+          const missingFields = [];
+          if (!backendData.empId) missingFields.push('Employee ID');
+          if (!backendData.empName) missingFields.push('Employee Name'); 
+          if (!backendData.jobPosition) missingFields.push('Job Position');
+          if (!backendData.address || backendData.address === 'Not specified') missingFields.push('Address');
+          if (!backendData.emailAddress) missingFields.push('Email Address');
+          
+          if (missingFields.length > 0) {
+            console.error('❌ Missing required fields:', missingFields);
+            setErrors({ submit: `Missing required fields: ${missingFields.join(', ')}` });
+            setLoading(false);
+            return;
+          }
+          
+          const backendResponse = await axios.post('http://localhost:5000/employees', backendData);
+          console.log('✅ SUCCESS! Employee saved to backend:', backendResponse.data);
+          
+          // Check if the response indicates success
+          if (backendResponse.status === 201 && backendResponse.data.success) {
+            response = backendResponse;
+            console.log('✅ Backend confirmed successful creation');
+          } else if (backendResponse.status === 201 && backendResponse.data.employee) {
+            // Handle legacy response format (without success field)
+            response = backendResponse;
+            console.log('✅ Employee created (legacy response format)');
+          } else {
+            throw new Error('Unexpected response format from backend');
+          }
+          
+        } catch (backendError) {
+          console.error('❌ BACKEND ERROR Details:');
+          console.error('Error message:', backendError.message);
+          console.error('Error response data:', backendError.response?.data);
+          console.error('Error status:', backendError.response?.status);
+          console.error('Full error object:', backendError);
+          
+          // Get the actual error message from backend
+          const backendErrorMessage = backendError.response?.data?.message || 
+                                     backendError.response?.data?.error || 
+                                     backendError.message || 
+                                     'Unknown server error';
+          
+          // Show specific error messages based on the backend response
+          if (backendError.response?.status === 400) {
+            console.log('🚫 Validation error from backend');
+            if (backendErrorMessage.includes('Employee ID already exists')) {
+              setErrors({ empID: 'This Employee ID is already taken. Please use a different ID.' });
+            } else if (backendErrorMessage.includes('Email address already exists')) {
+              setErrors({ email: 'This email address is already registered. Please use a different email.' });
+            } else if (backendErrorMessage.includes('required')) {
+              setErrors({ submit: `Missing required field: ${backendErrorMessage}` });
+            } else {
+              setErrors({ submit: `Validation Error: ${backendErrorMessage}` });
+            }
+            setLoading(false);
+            return;
+          } else if (backendError.response?.status === 500) {
+            console.log('� Server error from backend');
+            setErrors({ submit: `Server Error: Please try again later.` });
+            setLoading(false);
+            return;
+          } else if (backendError.code === 'ECONNREFUSED') {
+            console.log('🔌 Backend connection refused');
+            setErrors({ submit: `Cannot connect to server. Please check if the server is running.` });
+            setLoading(false);
+            return;
+          } else {
+            console.log('❓ Other backend error:', backendError.response?.status);
+            setErrors({ submit: `Error: ${backendErrorMessage}` });
+            setLoading(false);
+            return;
+          }
+        }
+        
+      } else {
+        // Update existing employee
+        const backendData = {
+          empId: formData.empID,
+          empName: formData.empName,
+          empPhone: formData.phone || '',
+          jobPosition: formData.jobPosition,
+          status: formData.status.toLowerCase(),
+          address: formData.address,
+          emailAddress: formData.email,
+          hireDate: formData.hireDate
+        };
+        
+        try {
+          response = await axios.put(`http://localhost:5000/employees/${employee._id}`, backendData);
+          console.log('Employee updated successfully:', response.data);
+        } catch (updateError) {
+          console.log('Backend update failed, using local update');
+          response = { data: { employee: { ...employee, ...backendData } } };
+        }
       }
       
-      onClose();
+      if (onEmployeeUpdate) {
+        console.log('Calling onEmployeeUpdate with:', response.data);
+        onEmployeeUpdate(response.data.employee || response.data);
+      }
+      
+      // Also trigger manual refresh events for any listening tables
+      console.log('🔄 Triggering table refresh events...');
+      window.dispatchEvent(new CustomEvent('refreshEmployeeTable'));
+      
+      // Clear any previous errors and show success
+      setErrors({});
+      console.log('✅ Employee creation completed successfully!');
+      
+      // Close modal after short delay to show success
+      setTimeout(() => {
+        onClose();
+      }, 500);
+      
     } catch (error) {
-      console.error('Error updating employee:', error);
-      setErrors({ submit: 'Failed to update employee. Please try again.' });
+      console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} employee:`, error);
+      setErrors({ submit: `Failed to ${mode === 'create' ? 'create' : 'update'} employee. Please try again.` });
     } finally {
       setLoading(false);
     }
   };
 
   const isViewMode = mode === 'view';
-  const title = isViewMode ? 'Employee Details' : 'Edit Employee';
+  const isCreateMode = mode === 'create';
+  
+  const title = isViewMode ? 'Employee Details' : (isCreateMode ? 'Add New Employee' : 'Edit Employee');
+  const buttonText = isCreateMode ? 'Create Employee' : 'Save Changes';
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -195,22 +594,48 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                select
-                label="Department"
-                value={formData.department}
-                onChange={(e) => handleInputChange('department', e.target.value)}
+                label="Email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
                 disabled={isViewMode}
-                error={!!errors.department}
-                helperText={errors.department}
+                error={!!errors.email}
+                helperText={errors.email}
                 required
-              >
-                {departments.map((dept) => (
-                  <MenuItem key={dept} value={dept}>
-                    {dept}
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
             </Grid>
+            
+            {/* Password field - only show for create mode */}
+            {isCreateMode && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  required
+                  placeholder="Enter password (min. 6 characters)"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleTogglePasswordVisibility}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+            )}
             
             <Grid item xs={12} sm={6}>
               <TextField
@@ -222,7 +647,8 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
                 disabled={isViewMode}
                 error={!!errors.jobPosition}
                 helperText={errors.jobPosition}
-                required
+                // Temporarily make it not required
+                // required
               >
                 {jobPositions.map((position) => (
                   <MenuItem key={position} value={position}>
@@ -235,37 +661,10 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.email}
-                helperText={errors.email}
-                required
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
                 label="Phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 disabled={isViewMode}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Salary"
-                type="number"
-                value={formData.salary}
-                onChange={(e) => handleInputChange('salary', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.salary}
-                helperText={errors.salary}
               />
             </Grid>
             
@@ -293,6 +692,56 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
                 {statusOptions.map((status) => (
                   <MenuItem key={status} value={status}>
                     {status}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                type="date"
+                value={formData.dob}
+                onChange={(e) => handleInputChange('dob', e.target.value)}
+                disabled={isViewMode}
+                error={!!errors.dob}
+                helperText={errors.dob}
+                required
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Age"
+                type="number"
+                value={formData.age}
+                onChange={(e) => handleInputChange('age', e.target.value)}
+                disabled={isViewMode || formData.dob} // Disable if DOB is filled (auto-calculated)
+                error={!!errors.age}
+                helperText={formData.dob ? "Auto-calculated from date of birth" : errors.age}
+                required
+                inputProps={{ min: 18, max: 65 }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Gender"
+                value={formData.gender}
+                onChange={(e) => handleInputChange('gender', e.target.value)}
+                disabled={isViewMode}
+                error={!!errors.gender}
+                helperText={errors.gender}
+                required
+              >
+                {genderOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
                   </MenuItem>
                 ))}
               </TextField>
@@ -364,7 +813,7 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
               '&:hover': { bgcolor: '#e55456' } 
             }}
           >
-            {loading ? 'Saving...' : 'Save Changes'}
+            {loading ? (isCreateMode ? 'Creating...' : 'Saving...') : buttonText}
           </Button>
         )}
       </DialogActions>

@@ -31,6 +31,8 @@ function Register() {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Add password visibility state
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Add confirm password visibility state
 
   const roles = [
     { value: 'user', label: 'User', description: 'Basic access to place orders and view reports' },
@@ -52,89 +54,402 @@ function Register() {
     { value: 'Designer', label: 'Designer' },
     { value: 'Supervisor', label: 'Supervisor' },
     { value: 'Operator', label: 'Operator' },
-    { value: 'Maintenance', label: 'Maintenance' }
+    { value: 'Maintenance', label: 'Maintenance' },
+    { value: 'Driver', label: 'Driver' }
   ];
+
+  // Function to calculate age from date of birth
+  const calculateAgeFromDOB = (dob) => {
+    if (!dob) return '';
+    
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) return '';
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age.toString();
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
+    
+    // Initialize updated form data
+    let updatedFormData = {
+      ...formData,
       [name]: value
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+    };
+    
+    // Auto-calculate age when date of birth is entered
+    if (name === 'dob') {
+      const calculatedAge = calculateAgeFromDOB(value);
+      if (calculatedAge) {
+        updatedFormData.age = calculatedAge;
+      }
     }
+    
+    // Update form data
+    setFormData(updatedFormData);
+    
+    // Real-time validation
+    const newErrors = { ...errors };
+    
+    // Clear existing error for this field
+    if (newErrors[name]) {
+      delete newErrors[name];
+    }
+    
+    // Clear age error if DOB auto-calculated the age
+    if (name === 'dob' && updatedFormData.age && newErrors.age) {
+      delete newErrors.age;
+    }
+    
+    // Validate the current field in real-time
+    let fieldError = '';
+    
+    switch (name) {
+      case 'empId':
+        fieldError = validateEmployeeId(value);
+        break;
+      case 'name':
+      case 'empName':
+        fieldError = validateName(value);
+        break;
+      case 'gmail':
+      case 'emailAddress':
+        fieldError = validateEmail(value);
+        break;
+      case 'jobPosition':
+        fieldError = validateJobPosition(value);
+        break;
+      case 'phone':
+      case 'empPhone':
+        fieldError = validatePhone(value);
+        break;
+      case 'address':
+        fieldError = validateAddress(value);
+        break;
+      case 'age':
+        fieldError = validateAge(value, formData.dob);
+        break;
+      case 'gender':
+        fieldError = validateGender(value);
+        break;
+      case 'dob':
+        fieldError = validateDateOfBirth(value);
+        // Auto-calculated age should be validated against the new DOB
+        if (!fieldError && updatedFormData.age) {
+          const ageError = validateAge(updatedFormData.age, value);
+          if (ageError && ageError.includes('date of birth')) {
+            newErrors.age = ageError;
+          } else if (newErrors.age && newErrors.age.includes('date of birth')) {
+            delete newErrors.age;
+          }
+        }
+        break;
+      case 'password':
+        fieldError = validatePassword(value);
+        // Also revalidate confirm password if it exists
+        if (formData.confirmPassword) {
+          const confirmError = validateConfirmPassword(formData.confirmPassword, value);
+          if (confirmError) {
+            newErrors.confirmPassword = confirmError;
+          } else {
+            delete newErrors.confirmPassword;
+          }
+        }
+        break;
+      case 'confirmPassword':
+        fieldError = validateConfirmPassword(value, formData.password);
+        break;
+      default:
+        break;
+    }
+    
+    // Add error if validation failed
+    if (fieldError) {
+      newErrors[name] = fieldError;
+    }
+    
+    // Update errors state
+    setErrors(newErrors);
+  };
+
+  // Validation helper functions
+  const validateEmployeeId = (empId) => {
+    if (!empId.trim()) {
+      return 'Employee ID is required';
+    }
+    if (!/^[a-zA-Z0-9]{4,10}$/.test(empId.trim())) {
+      return 'Employee ID must be 4-10 alphanumeric characters only';
+    }
+    return '';
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) {
+      return 'Name is required';
+    }
+    if (name.trim().length < 3) {
+      return 'Name must be at least 3 characters';
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return 'Name can only contain letters and spaces';
+    }
+    return '';
+  };
+
+  const validateEmail = (email) => {
+    if (!email.trim()) {
+      return 'Email is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address (name@domain.com)';
+    }
+    return '';
+  };
+
+  const validateJobPosition = (jobPosition) => {
+    if (!jobPosition || jobPosition === '') {
+      return 'Please select a job position';
+    }
+    return '';
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone.trim()) {
+      return 'Phone number is required';
+    }
+    // Allow formats: +94xxxxxxxxx or 0xxxxxxxxx or xxxxxxxxx
+    const phoneRegex = /^(\+94|0)?[0-9]{9,10}$/;
+    if (!phoneRegex.test(phone.trim().replace(/\s/g, ''))) {
+      return 'Please enter a valid phone number (10 digits)';
+    }
+    return '';
+  };
+
+  const validateAddress = (address) => {
+    if (!address.trim()) {
+      return 'Address is required';
+    }
+    if (address.trim().length < 5) {
+      return 'Address must be at least 5 characters';
+    }
+    // Allow letters, numbers, spaces, commas, dots, slashes - no special chars
+    if (!/^[a-zA-Z0-9\s,./\-]+$/.test(address.trim())) {
+      return 'Address contains invalid characters';
+    }
+    return '';
+  };
+
+  const validateAge = (age, dob = null) => {
+    if (!age) {
+      return 'Age is required';
+    }
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 60) {
+      return 'Age must be between 18 and 60 years';
+    }
+    
+    // Enhanced cross-validation with DOB if provided
+    if (dob) {
+      const birthDate = new Date(dob);
+      const today = new Date();
+      
+      // Calculate age more accurately
+      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
+      }
+      
+      // Allow exact match or difference of 1 year (for birthday timing)
+      if (Math.abs(calculatedAge - ageNum) > 1) {
+        return `Age should be ${calculatedAge} based on date of birth`;
+      }
+    }
+    return '';
+  };
+
+  const validateGender = (gender) => {
+    if (!gender || gender === '') {
+      return 'Please select your gender';
+    }
+    if (!['male', 'female', 'other'].includes(gender)) {
+      return 'Please select a valid gender option';
+    }
+    return '';
+  };
+
+  const validateDateOfBirth = (dob) => {
+    if (!dob) {
+      return 'Date of birth is required';
+    }
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) {
+      return 'Date of birth cannot be in the future';
+    }
+    
+    const age = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 18 || age > 60) {
+      return 'Age must be between 18 and 60 years';
+    }
+    return '';
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (!hasUppercase) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!hasLowercase) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!hasNumber) {
+      return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+      return 'Password must contain at least one special character';
+    }
+    
+    // Common passwords check
+    const commonPasswords = ['password', '12345678', 'password123', 'admin123', 'qwerty123'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+      return 'Please choose a more secure password';
+    }
+    
+    return '';
+  };
+
+  const validateConfirmPassword = (confirmPassword, password) => {
+    if (!confirmPassword) {
+      return 'Please confirm your password';
+    }
+    if (confirmPassword !== password) {
+      return 'Passwords do not match';
+    }
+    return '';
+  };
+
+  // Toggle password visibility functions
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   const validateForm = () => {
     const newErrors = {};
 
+    // Trim all string inputs
+    const trimmedData = {
+      ...formData,
+      name: formData.name?.trim(),
+      empName: formData.empName?.trim(),
+      empId: formData.empId?.trim(),
+      gmail: formData.gmail?.trim(),
+      emailAddress: formData.emailAddress?.trim(),
+      phone: formData.phone?.trim(),
+      empPhone: formData.empPhone?.trim(),
+      address: formData.address?.trim()
+    };
+
     // Common validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
     if (!formData.role) {
       newErrors.role = 'Please select a role';
     }
 
+    // Password validation (common for all roles)
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
+    }
+
+    const confirmPasswordError = validateConfirmPassword(formData.confirmPassword, formData.password);
+    if (confirmPasswordError) {
+      newErrors.confirmPassword = confirmPasswordError;
+    }
+
     // Role-specific validation
     if (formData.role === 'user') {
-      if (!formData.name.trim()) {
-        newErrors.name = 'Name is required';
-      }
-      if (!formData.gmail) {
-        newErrors.gmail = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.gmail)) {
-        newErrors.gmail = 'Email is invalid';
-      }
-      if (!formData.age) {
-        newErrors.age = 'Age is required';
-      } else if (formData.age < 1 || formData.age > 120) {
-        newErrors.age = 'Please enter a valid age';
-      }
-      if (!formData.address.trim()) {
-        newErrors.address = 'Address is required';
-      }
+      const nameError = validateName(trimmedData.name);
+      if (nameError) newErrors.name = nameError;
+
+      const emailError = validateEmail(trimmedData.gmail);
+      if (emailError) newErrors.gmail = emailError;
+
+      const phoneError = validatePhone(trimmedData.phone);
+      if (phoneError) newErrors.phone = phoneError;
+
+      const addressError = validateAddress(trimmedData.address);
+      if (addressError) newErrors.address = addressError;
+
+      const ageError = validateAge(formData.age, formData.dob);
+      if (ageError) newErrors.age = ageError;
+
+      const genderError = validateGender(formData.gender);
+      if (genderError) newErrors.gender = genderError;
+
+      const dobError = validateDateOfBirth(formData.dob);
+      if (dobError) newErrors.dob = dobError;
+
     } else if (formData.role === 'employee') {
-      if (!formData.empId.trim()) {
-        newErrors.empId = 'Employee ID is required';
-      }
-      if (!formData.empName.trim()) {
-        newErrors.empName = 'Employee name is required';
-      }
-      if (!formData.emailAddress) {
-        newErrors.emailAddress = 'Email address is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.emailAddress)) {
-        newErrors.emailAddress = 'Email is invalid';
-      }
-      if (!formData.jobPosition) {
-        newErrors.jobPosition = 'Job position is required';
-      }
-      if (!formData.address.trim()) {
-        newErrors.address = 'Address is required';
-      }
+      const empIdError = validateEmployeeId(trimmedData.empId);
+      if (empIdError) newErrors.empId = empIdError;
+
+      const empNameError = validateName(trimmedData.empName);
+      if (empNameError) newErrors.empName = empNameError;
+
+      const emailError = validateEmail(trimmedData.emailAddress);
+      if (emailError) newErrors.emailAddress = emailError;
+
+      const jobPositionError = validateJobPosition(formData.jobPosition);
+      if (jobPositionError) newErrors.jobPosition = jobPositionError;
+
+      const phoneError = validatePhone(trimmedData.empPhone);
+      if (phoneError) newErrors.empPhone = phoneError;
+
+      const addressError = validateAddress(trimmedData.address);
+      if (addressError) newErrors.address = addressError;
+
+      const ageError = validateAge(formData.age, formData.dob);
+      if (ageError) newErrors.age = ageError;
+
+      const genderError = validateGender(formData.gender);
+      if (genderError) newErrors.gender = genderError;
+
+      const dobError = validateDateOfBirth(formData.dob);
+      if (dobError) newErrors.dob = dobError;
+
     } else if (formData.role === 'admin') {
-      if (!formData.name.trim()) {
-        newErrors.name = 'Name is required';
-      }
-      if (!formData.gmail) {
-        newErrors.gmail = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.gmail)) {
-        newErrors.gmail = 'Email is invalid';
-      }
+      const nameError = validateName(trimmedData.name);
+      if (nameError) newErrors.name = nameError;
+
+      const emailError = validateEmail(trimmedData.gmail);
+      if (emailError) newErrors.gmail = emailError;
     }
 
     setErrors(newErrors);
@@ -718,19 +1033,35 @@ function Register() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative">
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#EF6869] focus:border-[#EF6869] sm:text-sm ${
+                  className={`appearance-none block w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#EF6869] focus:border-[#EF6869] sm:text-sm ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Create a password"
                 />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                 )}
@@ -741,19 +1072,35 @@ function Register() {
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative">
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#EF6869] focus:border-[#EF6869] sm:text-sm ${
+                  className={`appearance-none block w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#EF6869] focus:border-[#EF6869] sm:text-sm ${
                     errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Confirm your password"
                 />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={toggleConfirmPasswordVisibility}
+                >
+                  {showConfirmPassword ? (
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
                 {errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
                 )}
