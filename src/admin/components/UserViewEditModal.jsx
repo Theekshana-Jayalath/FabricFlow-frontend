@@ -61,39 +61,219 @@ const UserViewEditModal = ({ open, onClose, user, mode, onUserUpdate }) => {
     setErrors({});
   }, [user, mode]);
 
+  // Comprehensive validation helper functions
+  const validateUserName = (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return 'Name is required';
+    }
+    if (trimmed.length < 3) {
+      return 'Name must be at least 3 characters';
+    }
+    if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
+      return 'Name can only contain letters and spaces (no numbers or special characters)';
+    }
+    return '';
+  };
+
+  const validateEmail = (email) => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      return 'Email address is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Please enter a valid email address (name@domain.com)';
+    }
+    // TODO: Add uniqueness check against database
+    return '';
+  };
+
+  const validatePhoneNumber = (phone) => {
+    const trimmed = phone.trim();
+    if (!trimmed) {
+      return 'Phone number is required';
+    }
+    
+    // Remove all non-digits for validation
+    const digitsOnly = trimmed.replace(/\D/g, '');
+    
+    // Check for valid Sri Lankan phone formats
+    // +94XXXXXXXXX (12 digits total) or 0XXXXXXXXX (10 digits) or XXXXXXXXX (9 digits)
+    if (!/^(\+94[0-9]{9}|0[0-9]{9}|[0-9]{9})$/.test(trimmed.replace(/\s/g, ''))) {
+      return 'Please enter a valid phone number (10 digits, may include +94 country code)';
+    }
+    
+    if (digitsOnly.length < 9 || digitsOnly.length > 12) {
+      return 'Phone number must be 9-12 digits';
+    }
+    
+    // TODO: Add uniqueness check against database
+    return '';
+  };
+
+  const validateAddress = (address) => {
+    const trimmed = address.trim();
+    if (!trimmed) {
+      return 'Address is required';
+    }
+    if (trimmed.length < 5) {
+      return 'Address must be at least 5 characters';
+    }
+    // Allow letters, numbers, spaces, commas, dots, slashes, hyphens - no special chars like !@#$%^&*
+    if (!/^[a-zA-Z0-9\s,./\-]+$/.test(trimmed)) {
+      return 'Address contains invalid characters (only letters, numbers, spaces, commas, dots, slashes, and hyphens allowed)';
+    }
+    return '';
+  };
+
+  const validateAge = (age, dob = null) => {
+    if (!age) {
+      return 'Age is required';
+    }
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 60) {
+      return 'Age must be between 18 and 60 years';
+    }
+    
+    // Cross-validation with DOB if provided
+    if (dob) {
+      const birthDate = new Date(dob);
+      const today = new Date();
+      const calculatedAge = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+      if (Math.abs(calculatedAge - ageNum) > 1) {
+        return 'Age does not match the date of birth';
+      }
+    }
+    return '';
+  };
+
+  const validateGender = (gender) => {
+    if (!gender || gender === '') {
+      return 'Gender is required';
+    }
+    if (!['male', 'female', 'other'].includes(gender.toLowerCase())) {
+      return 'Please select a valid gender option (Male, Female, or Other)';
+    }
+    return '';
+  };
+
+  const validateDateOfBirth = (dob) => {
+    if (!dob) {
+      return 'Date of birth is required';
+    }
+    
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) {
+      return 'Date of birth cannot be in the future';
+    }
+    
+    const age = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 18 || age > 60) {
+      return 'Age calculated from date of birth must be between 18 and 60 years';
+    }
+    return '';
+  };
+
   const handleInputChange = (field, value) => {
+    // Trim whitespace for relevant fields
+    let processedValue = value;
+    if (['name', 'email', 'phone', 'address'].includes(field)) {
+      processedValue = value.trim();
+    }
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+    
+    // Real-time validation
+    const newErrors = { ...errors };
+    
+    // Clear existing error for this field
+    if (newErrors[field]) {
+      delete newErrors[field];
     }
+    
+    // Validate the current field in real-time
+    let fieldError = '';
+    
+    switch (field) {
+      case 'name':
+        fieldError = validateUserName(processedValue);
+        break;
+      case 'email':
+        fieldError = validateEmail(processedValue);
+        break;
+      case 'phone':
+        fieldError = validatePhoneNumber(processedValue);
+        break;
+      case 'address':
+        fieldError = validateAddress(processedValue);
+        break;
+      case 'age':
+        fieldError = validateAge(processedValue, formData.dob);
+        break;
+      case 'gender':
+        fieldError = validateGender(processedValue);
+        break;
+      case 'dob':
+        fieldError = validateDateOfBirth(processedValue);
+        // Also revalidate age if DOB changes
+        if (!fieldError && formData.age) {
+          const ageError = validateAge(formData.age, processedValue);
+          if (ageError && ageError.includes('date of birth')) {
+            newErrors.age = ageError;
+          } else if (newErrors.age && newErrors.age.includes('date of birth')) {
+            delete newErrors.age;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    
+    // Add error if validation failed
+    if (fieldError) {
+      newErrors[field] = fieldError;
+    }
+    
+    // Update errors state
+    setErrors(newErrors);
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+
+    // Validate all required fields
+    const nameError = validateUserName(formData.name);
+    if (nameError) newErrors.name = nameError;
+
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
+
+    const phoneError = validatePhoneNumber(formData.phone);
+    if (phoneError) newErrors.phone = phoneError;
+
+    const addressError = validateAddress(formData.address);
+    if (addressError) newErrors.address = addressError;
+
+    const ageError = validateAge(formData.age, formData.dob);
+    if (ageError) newErrors.age = ageError;
+
+    const genderError = validateGender(formData.gender);
+    if (genderError) newErrors.gender = genderError;
+
+    if (formData.dob) {
+      const dobError = validateDateOfBirth(formData.dob);
+      if (dobError) newErrors.dob = dobError;
     }
 
-    if (formData.age && (isNaN(formData.age) || formData.age < 0 || formData.age > 150)) {
-      newErrors.age = 'Please enter a valid age';
-    }
-
-    if (formData.phone && !/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    // Role validation (should not be empty)
+    if (!formData.role || formData.role === '') {
+      newErrors.role = 'Role is required';
     }
 
     setErrors(newErrors);

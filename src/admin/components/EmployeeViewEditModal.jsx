@@ -104,55 +104,263 @@ const EmployeeViewEditModal = ({ open, onClose, employee, mode, onEmployeeUpdate
     setErrors({});
   }, [employee, mode]);
 
+  // Comprehensive validation helper functions
+  const validateEmployeeId = (empID) => {
+    const trimmed = empID.trim();
+    if (!trimmed) {
+      return 'Employee ID is required';
+    }
+    if (!/^[a-zA-Z0-9]{4,10}$/.test(trimmed)) {
+      return 'Employee ID must be 4-10 alphanumeric characters only (no special characters)';
+    }
+    // TODO: Add uniqueness check against database
+    return '';
+  };
+
+  const validateEmployeeName = (empName) => {
+    const trimmed = empName.trim();
+    if (!trimmed) {
+      return 'Employee name is required';
+    }
+    if (trimmed.length < 3) {
+      return 'Employee name must be at least 3 characters';
+    }
+    if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
+      return 'Employee name can only contain letters and spaces (no numbers or special characters)';
+    }
+    return '';
+  };
+
+  const validateEmail = (email) => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      return 'Email address is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Please enter a valid email address (name@domain.com)';
+    }
+    // TODO: Add uniqueness check against database
+    return '';
+  };
+
+  const validateJobPosition = (jobPosition) => {
+    if (!jobPosition || jobPosition === '') {
+      return 'Job position is required';
+    }
+    if (!jobPositionOptions.includes(jobPosition)) {
+      return 'Please select a valid job position from the dropdown';
+    }
+    return '';
+  };
+
+  const validatePhoneNumber = (phoneNo) => {
+    const trimmed = phoneNo.trim();
+    if (!trimmed) {
+      return 'Phone number is required';
+    }
+    
+    // Remove all non-digits for validation
+    const digitsOnly = trimmed.replace(/\D/g, '');
+    
+    // Check for valid Sri Lankan phone formats
+    // +94XXXXXXXXX (12 digits total) or 0XXXXXXXXX (10 digits) or XXXXXXXXX (9 digits)
+    if (!/^(\+94[0-9]{9}|0[0-9]{9}|[0-9]{9})$/.test(trimmed.replace(/\s/g, ''))) {
+      return 'Please enter a valid phone number (10 digits, may include +94 country code)';
+    }
+    
+    if (digitsOnly.length < 9 || digitsOnly.length > 12) {
+      return 'Phone number must be 9-12 digits';
+    }
+    
+    // TODO: Add uniqueness check against database
+    return '';
+  };
+
+  const validateAddress = (address) => {
+    const trimmed = address.trim();
+    if (!trimmed) {
+      return 'Address is required';
+    }
+    if (trimmed.length < 5) {
+      return 'Address must be at least 5 characters';
+    }
+    // Allow letters, numbers, spaces, commas, dots, slashes, hyphens - no special chars like !@#$%^&*
+    if (!/^[a-zA-Z0-9\s,./\-]+$/.test(trimmed)) {
+      return 'Address contains invalid characters (only letters, numbers, spaces, commas, dots, slashes, and hyphens allowed)';
+    }
+    return '';
+  };
+
+  const validateAge = (age, dob = null) => {
+    if (!age) {
+      return 'Age is required';
+    }
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 60) {
+      return 'Age must be between 18 and 60 years';
+    }
+    
+    // Cross-validation with DOB if provided
+    if (dob) {
+      const birthDate = new Date(dob);
+      const today = new Date();
+      const calculatedAge = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+      if (Math.abs(calculatedAge - ageNum) > 1) {
+        return 'Age does not match the date of birth';
+      }
+    }
+    return '';
+  };
+
+  const validateGender = (gender) => {
+    if (!gender || gender === '') {
+      return 'Gender is required';
+    }
+    if (!['male', 'female', 'other'].includes(gender.toLowerCase())) {
+      return 'Please select a valid gender option (Male, Female, or Other)';
+    }
+    return '';
+  };
+
+  const validateDateOfBirth = (dob) => {
+    if (!dob) {
+      return 'Date of birth is required';
+    }
+    
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) {
+      return 'Date of birth cannot be in the future';
+    }
+    
+    const age = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 18 || age > 60) {
+      return 'Age calculated from date of birth must be between 18 and 60 years';
+    }
+    return '';
+  };
+
   const handleInputChange = (field, value) => {
+    // Trim whitespace for relevant fields
+    let processedValue = value;
+    if (['empName', 'empID', 'email', 'phoneNo', 'address'].includes(field)) {
+      processedValue = value.trim();
+    }
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
+    
+    // Real-time validation
+    const newErrors = { ...errors };
+    
+    // Clear existing error for this field
+    if (newErrors[field]) {
+      delete newErrors[field];
     }
+    
+    // Validate the current field in real-time
+    let fieldError = '';
+    
+    switch (field) {
+      case 'empID':
+        fieldError = validateEmployeeId(processedValue);
+        break;
+      case 'empName':
+        fieldError = validateEmployeeName(processedValue);
+        break;
+      case 'email':
+        fieldError = validateEmail(processedValue);
+        break;
+      case 'jobPosition':
+        fieldError = validateJobPosition(processedValue);
+        break;
+      case 'phoneNo':
+        fieldError = validatePhoneNumber(processedValue);
+        break;
+      case 'address':
+        fieldError = validateAddress(processedValue);
+        break;
+      case 'age':
+        fieldError = validateAge(processedValue, formData.hireDate);
+        break;
+      case 'gender':
+        fieldError = validateGender(processedValue);
+        break;
+      case 'hireDate':
+        fieldError = validateDateOfBirth(processedValue);
+        // Also revalidate age if DOB changes
+        if (!fieldError && formData.age) {
+          const ageError = validateAge(formData.age, processedValue);
+          if (ageError && ageError.includes('date of birth')) {
+            newErrors.age = ageError;
+          } else if (newErrors.age && newErrors.age.includes('date of birth')) {
+            delete newErrors.age;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    
+    // Add error if validation failed
+    if (fieldError) {
+      newErrors[field] = fieldError;
+    }
+    
+    // Update errors state
+    setErrors(newErrors);
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.empName.trim()) {
-      newErrors.empName = 'Employee name is required';
-    }
-    
-    if (!formData.empID.trim()) {
-      newErrors.empID = 'Employee ID is required';
+
+    // Validate all required fields
+    const empIDError = validateEmployeeId(formData.empID);
+    if (empIDError) newErrors.empID = empIDError;
+
+    const empNameError = validateEmployeeName(formData.empName);
+    if (empNameError) newErrors.empName = empNameError;
+
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
+
+    const jobPositionError = validateJobPosition(formData.jobPosition);
+    if (jobPositionError) newErrors.jobPosition = jobPositionError;
+
+    const phoneError = validatePhoneNumber(formData.phoneNo);
+    if (phoneError) newErrors.phoneNo = phoneError;
+
+    const addressError = validateAddress(formData.address);
+    if (addressError) newErrors.address = addressError;
+
+    const ageError = validateAge(formData.age, formData.hireDate);
+    if (ageError) newErrors.age = ageError;
+
+    const genderError = validateGender(formData.gender);
+    if (genderError) newErrors.gender = genderError;
+
+    if (formData.hireDate) {
+      const dobError = validateDateOfBirth(formData.hireDate);
+      if (dobError) newErrors.hireDate = dobError;
     }
 
-    if (!formData.department.trim()) {
+    // Department validation
+    if (!formData.department || formData.department === '') {
       newErrors.department = 'Department is required';
     }
 
-    if (!formData.jobPosition.trim()) {
-      newErrors.jobPosition = 'Job position is required';
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    // Status validation
+    if (!formData.status || formData.status === '') {
+      newErrors.status = 'Status is required';
     }
 
-    if (formData.age && (isNaN(formData.age) || formData.age < 16 || formData.age > 80)) {
-      newErrors.age = 'Please enter a valid age (16-80)';
-    }
-
-    if (formData.phoneNo && !/^\d{10}$/.test(formData.phoneNo.replace(/\D/g, ''))) {
-      newErrors.phoneNo = 'Please enter a valid 10-digit phone number';
-    }
-
-    if (formData.salary && (isNaN(formData.salary) || formData.salary < 0)) {
-      newErrors.salary = 'Please enter a valid salary amount';
+    // Salary validation (if provided)
+    if (formData.salary && (isNaN(formData.salary) || parseFloat(formData.salary) < 0)) {
+      newErrors.salary = 'Please enter a valid salary amount (must be a positive number)';
     }
 
     setErrors(newErrors);

@@ -63,20 +63,89 @@ const EmployeeTable = () => {
   // Fetch employees from backend
   useEffect(() => {
     fetchEmployees();
+    
+    // Also refresh when component becomes visible (when navigating to this page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible, refreshing employees');
+        fetchEmployees();
+      }
+    };
+    
+    // Listen for localStorage changes from other tabs/components
+    const handleStorageChange = (e) => {
+      if (e.key === 'localEmployees') {
+        console.log('Local employees changed, refreshing table');
+        fetchEmployees();
+      }
+    };
+    
+    // Listen for custom refresh events from AdminDashboard
+    const handleCustomRefresh = () => {
+      console.log('Custom refresh event received, refreshing employees');
+      fetchEmployees();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('refreshEmployeeTable', handleCustomRefresh);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('refreshEmployeeTable', handleCustomRefresh);
+    };
   }, []);
 
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/employees');
-      const employeeData = response.data?.employees || response.data || [];
-      setEmployees(employeeData);
-      setFilteredEmployees(employeeData);
+      
+      // First, try to fetch from backend
+      let backendEmployees = [];
+      try {
+        const response = await axios.get('http://localhost:5000/employees');
+        backendEmployees = response.data?.employees || response.data || [];
+        console.log('Fetched employees from backend:', backendEmployees.length);
+      } catch (backendError) {
+        console.log('Backend not available, using local data only');
+      }
+      
+      // Get employees from localStorage (created when backend is down)
+      const localEmployees = JSON.parse(localStorage.getItem('localEmployees') || '[]');
+      console.log('Local employees found:', localEmployees.length);
+      
+      // Combine backend and local employees, avoiding duplicates
+      const allEmployees = [...backendEmployees];
+      
+      // Add local employees that don't exist in backend data
+      localEmployees.forEach(localEmp => {
+        const existsInBackend = backendEmployees.some(backendEmp => 
+          backendEmp.empId === localEmp.empId || backendEmp._id === localEmp._id
+        );
+        if (!existsInBackend) {
+          allEmployees.push(localEmp);
+        }
+      });
+      
+      console.log('Total employees (backend + local):', allEmployees.length);
+      setEmployees(allEmployees);
+      setFilteredEmployees(allEmployees);
+      
+      // If we successfully got backend data, clear localStorage to avoid duplicates
+      if (backendEmployees.length > 0) {
+        localStorage.removeItem('localEmployees');
+        console.log('Cleared local employees cache - backend is working');
+      }
+      
     } catch (error) {
-      console.error('Error fetching employees:', error);
+      console.error('Error in fetchEmployees:', error);
       showAlert('Failed to fetch employees from server', 'error');
-      setEmployees([]);
-      setFilteredEmployees([]);
+      
+      // Fallback to localStorage only
+      const localEmployees = JSON.parse(localStorage.getItem('localEmployees') || '[]');
+      setEmployees(localEmployees);
+      setFilteredEmployees(localEmployees);
     } finally {
       setLoading(false);
     }
@@ -463,6 +532,35 @@ const EmployeeTable = () => {
               }}
             >
               Download PDF
+            </Button>
+          </Box>
+
+          {/* Debug Info and Refresh */}
+          <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Debug Info: Total Employees: {employees.length} | Filtered: {filteredEmployees.length} | 
+              Local Storage: {JSON.parse(localStorage.getItem('localEmployees') || '[]').length} employees
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => {
+                console.log('Manual refresh clicked');
+                fetchEmployees();
+              }}
+              sx={{ mr: 1, bgcolor: '#005A54' }}
+            >
+              Refresh Table
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                const localData = localStorage.getItem('localEmployees');
+                console.log('LocalStorage data:', localData);
+                alert(`LocalStorage contains: ${localData ? JSON.parse(localData).length : 0} employees`);
+              }}
+              sx={{ borderColor: '#005A54', color: '#005A54' }}
+            >
+              Check Local Data
             </Button>
           </Box>
 

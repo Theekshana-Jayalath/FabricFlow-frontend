@@ -51,6 +51,8 @@ import {
   Line
 } from 'recharts';
 import axios from 'axios';
+import UserModal from '../components/UserModal';
+import EmployeeModal from '../components/EmployeeModal';
 
 const AdminDashboard = () => {
   const { logout, getDisplayName } = useAuth();
@@ -75,6 +77,10 @@ const AdminDashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [departmentData, setDepartmentData] = useState([]);
+  
+  // Modal states
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
 
   // Sample chart data
   const revenueData = [
@@ -101,6 +107,62 @@ const AdminDashboard = () => {
     setRefreshing(true);
     await fetchDashboardData();
     setTimeout(() => setRefreshing(false), 1000); // Add a brief delay for better UX
+  };
+
+  // Modal handlers
+  const handleAddUser = () => {
+    setUserModalOpen(true);
+  };
+
+  const handleAddEmployee = () => {
+    setEmployeeModalOpen(true);
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    console.log('User created successfully:', updatedUser);
+    
+    // Update stats immediately for better UX
+    setStats(prevStats => ({
+      ...prevStats,
+      totalUsers: prevStats.totalUsers + 1,
+      maleUsers: updatedUser.gender === 'male' ? prevStats.maleUsers + 1 : prevStats.maleUsers,
+      femaleUsers: updatedUser.gender === 'female' ? prevStats.femaleUsers + 1 : prevStats.femaleUsers
+    }));
+    
+    // Also refresh dashboard data from backend
+    fetchDashboardData();
+    
+    // Force refresh of user table if it exists
+    const refreshEvent = new CustomEvent('refreshUserTable');
+    window.dispatchEvent(refreshEvent);
+  };
+
+  const handleEmployeeUpdate = (updatedEmployee) => {
+    console.log('Employee created successfully:', updatedEmployee);
+    
+    // Update stats immediately for better UX
+    setStats(prevStats => ({
+      ...prevStats,
+      totalEmployees: prevStats.totalEmployees + 1,
+      activeEmployees: updatedEmployee.status === 'active' ? prevStats.activeEmployees + 1 : prevStats.activeEmployees
+    }));
+    
+    // Also refresh dashboard data from backend
+    fetchDashboardData();
+    
+    // Force refresh of employee table if it exists
+    const refreshEvent = new CustomEvent('refreshEmployeeTable');
+    window.dispatchEvent(refreshEvent);
+  };
+
+  const handleViewOrders = () => {
+    // Navigate to orders page or show orders modal
+    navigate('/admin/orders');
+  };
+
+  const handleViewReports = () => {
+    // Navigate to reports page or show reports modal  
+    navigate('/admin/reports');
   };
 
   const fetchDashboardData = async () => {
@@ -490,7 +552,7 @@ const AdminDashboard = () => {
 
         {/* Interactive Charts Section */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          {/* Revenue Chart */}
+          {/* Revenue Chart - Full width on smaller screens, 8/12 on large */}
           <Grid item xs={12} lg={8}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -502,14 +564,14 @@ const AdminDashboard = () => {
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 '&:hover': { boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }
               }}>
-                <CardContent>
+                <CardContent sx={{ height: '100%' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Typography variant="h6" component="h2" sx={{ color: '#005A54', fontWeight: 'bold' }}>
                       Monthly Analytics
                     </Typography>
                     <Chip label="Revenue Trend" color="primary" variant="outlined" />
                   </Box>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={320}>
                     <AreaChart data={revenueData}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -536,7 +598,7 @@ const AdminDashboard = () => {
             </motion.div>
           </Grid>
 
-          {/* Gender Distribution Pie Chart */}
+          {/* Gender Distribution Pie Chart - Full width on smaller screens, 4/12 on large */}
           <Grid item xs={12} lg={4}>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -548,11 +610,11 @@ const AdminDashboard = () => {
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 '&:hover': { boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }
               }}>
-                <CardContent>
+                <CardContent sx={{ height: '100%' }}>
                   <Typography variant="h6" component="h2" sx={{ mb: 2, color: '#005A54', fontWeight: 'bold' }}>
                     User Distribution
                   </Typography>
-                  <ResponsiveContainer width="100%" height={250}>
+                  <ResponsiveContainer width="100%" height={270}>
                     <PieChart>
                       <Pie
                         data={[
@@ -597,8 +659,9 @@ const AdminDashboard = () => {
           </Grid>
         </Grid>
 
-        {/* Enhanced Recent Activity */}
-        <Grid container spacing={3}>
+        {/* Enhanced Recent Activity and Department Distribution */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* Recent Activity - Full width on mobile, half on desktop */}
           <Grid item xs={12} md={6}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -606,15 +669,15 @@ const AdminDashboard = () => {
               transition={{ duration: 0.6, delay: 0.5 }}
             >
               <Card sx={{ 
-                height: 400,
+                height: 450,
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 '&:hover': { boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }
               }}>
-                <CardContent>
+                <CardContent sx={{ height: '100%' }}>
                   <Typography variant="h6" component="h2" sx={{ mb: 2, color: '#005A54', fontWeight: 'bold' }}>
                     Recent Activity
                   </Typography>
-                  <List sx={{ maxHeight: 280, overflow: 'auto' }}>
+                  <List sx={{ maxHeight: 320, overflow: 'auto' }}>
                     <AnimatePresence>
                       {recentActivity.map((activity, index) => (
                         <motion.div
@@ -689,7 +752,7 @@ const AdminDashboard = () => {
             </motion.div>
           </Grid>
 
-          {/* Department Stats */}
+          {/* Department Stats - Full width on mobile, half on desktop */}
           <Grid item xs={12} md={6}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -697,15 +760,15 @@ const AdminDashboard = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
             >
               <Card sx={{ 
-                height: 400,
+                height: 450,
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 '&:hover': { boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }
               }}>
-                <CardContent>
+                <CardContent sx={{ height: '100%' }}>
                   <Typography variant="h6" component="h2" sx={{ mb: 2, color: '#005A54', fontWeight: 'bold' }}>
                     Employee Distribution by Department
                   </Typography>
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
                       <Pie
                         data={departmentData}
@@ -713,7 +776,7 @@ const AdminDashboard = () => {
                         cy="50%"
                         labelLine={false}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
+                        outerRadius={100}
                         fill="#8884d8"
                         dataKey="employees"
                       >
@@ -733,7 +796,7 @@ const AdminDashboard = () => {
                   </ResponsiveContainer>
                   
                   {/* Legend */}
-                  <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1.5, mt: 2 }}>
                     {departmentData.map((dept, index) => (
                       <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Box sx={{ width: 12, height: 12, bgcolor: dept.color, borderRadius: '50%' }} />
@@ -761,6 +824,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="contained"
                     startIcon={<People />}
+                    onClick={handleAddUser}
                     sx={{
                       bgcolor: '#005A54',
                       '&:hover': { bgcolor: '#004A44' },
@@ -775,6 +839,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="contained"
                     startIcon={<Work />}
+                    onClick={handleAddEmployee}
                     sx={{
                       bgcolor: '#EF6869',
                       '&:hover': { bgcolor: '#d55859' },
@@ -789,6 +854,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="outlined"
                     startIcon={<ShoppingBag />}
+                    onClick={handleViewOrders}
                     sx={{
                       borderColor: '#005A54',
                       color: '#005A54',
@@ -807,6 +873,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="outlined"
                     startIcon={<TrendingUp />}
+                    onClick={handleViewReports}
                     sx={{
                       borderColor: '#EF6869',
                       color: '#EF6869',
@@ -825,6 +892,24 @@ const AdminDashboard = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* User Creation Modal */}
+      <UserModal
+        open={userModalOpen}
+        onClose={() => setUserModalOpen(false)}
+        user={null}
+        mode="create"
+        onUserUpdate={handleUserUpdate}
+      />
+
+      {/* Employee Creation Modal */}
+      <EmployeeModal
+        open={employeeModalOpen}
+        onClose={() => setEmployeeModalOpen(false)}
+        employee={null}
+        mode="create"
+        onEmployeeUpdate={handleEmployeeUpdate}
+      />
     </Box>
     </motion.div>
   );

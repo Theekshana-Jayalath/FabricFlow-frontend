@@ -61,20 +61,89 @@ const UserTable = () => {
   // Fetch users from backend
   useEffect(() => {
     fetchUsers();
+    
+    // Also refresh when component becomes visible (when navigating to this page)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Page became visible, refreshing users');
+        fetchUsers();
+      }
+    };
+    
+    // Listen for localStorage changes from other tabs/components
+    const handleStorageChange = (e) => {
+      if (e.key === 'localUsers') {
+        console.log('Local users changed, refreshing table');
+        fetchUsers();
+      }
+    };
+    
+    // Listen for custom refresh events from AdminDashboard
+    const handleCustomRefresh = () => {
+      console.log('Custom refresh event received, refreshing users');
+      fetchUsers();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('refreshUserTable', handleCustomRefresh);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('refreshUserTable', handleCustomRefresh);
+    };
   }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/users');
-      const userData = response.data?.users || response.data || [];
-      setUsers(userData);
-      setFilteredUsers(userData);
+      
+      // First, try to fetch from backend
+      let backendUsers = [];
+      try {
+        const response = await axios.get('http://localhost:5000/users');
+        backendUsers = response.data?.users || response.data || [];
+        console.log('Fetched users from backend:', backendUsers.length);
+      } catch (backendError) {
+        console.log('Backend not available, using local data only');
+      }
+      
+      // Get users from localStorage (created when backend is down)
+      const localUsers = JSON.parse(localStorage.getItem('localUsers') || '[]');
+      console.log('Local users found:', localUsers.length);
+      
+      // Combine backend and local users, avoiding duplicates
+      const allUsers = [...backendUsers];
+      
+      // Add local users that don't exist in backend data
+      localUsers.forEach(localUser => {
+        const existsInBackend = backendUsers.some(backendUser => 
+          backendUser.email === localUser.email || backendUser.gmail === localUser.gmail || backendUser._id === localUser._id
+        );
+        if (!existsInBackend) {
+          allUsers.push(localUser);
+        }
+      });
+      
+      console.log('Total users (backend + local):', allUsers.length);
+      setUsers(allUsers);
+      setFilteredUsers(allUsers);
+      
+      // If we successfully got backend data, clear localStorage to avoid duplicates
+      if (backendUsers.length > 0) {
+        localStorage.removeItem('localUsers');
+        console.log('Cleared local users cache - backend is working');
+      }
+      
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error in fetchUsers:', error);
       showAlert('Failed to fetch users from server', 'error');
-      setUsers([]);
-      setFilteredUsers([]);
+      
+      // Fallback to localStorage only
+      const localUsers = JSON.parse(localStorage.getItem('localUsers') || '[]');
+      setUsers(localUsers);
+      setFilteredUsers(localUsers);
     } finally {
       setLoading(false);
     }
@@ -454,6 +523,35 @@ const UserTable = () => {
               }}
             >
               Download PDF
+            </Button>
+          </Box>
+
+          {/* Debug Info and Refresh */}
+          <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Debug Info: Total Users: {users.length} | Filtered: {filteredUsers.length} | 
+              Local Storage: {JSON.parse(localStorage.getItem('localUsers') || '[]').length} users
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => {
+                console.log('Manual refresh clicked');
+                fetchUsers();
+              }}
+              sx={{ mr: 1, bgcolor: '#005A54' }}
+            >
+              Refresh Table
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                const localData = localStorage.getItem('localUsers');
+                console.log('LocalStorage data:', localData);
+                alert(`LocalStorage contains: ${localData ? JSON.parse(localData).length : 0} users`);
+              }}
+              sx={{ borderColor: '#005A54', color: '#005A54' }}
+            >
+              Check Local Data
             </Button>
           </Box>
 
