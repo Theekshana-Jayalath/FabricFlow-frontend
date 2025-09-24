@@ -28,36 +28,86 @@ function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Update form data with trimmed values for email
+    const trimmedValue = name === 'email' ? value.trim() : value;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: trimmedValue
     }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+    
+    // Real-time validation
+    const newErrors = { ...errors };
+    
+    // Clear existing error for this field
+    if (newErrors[name]) {
+      delete newErrors[name];
     }
+    
+    // Validate the current field in real-time
+    let fieldError = '';
+    
+    switch (name) {
+      case 'email':
+        if (!trimmedValue) {
+          fieldError = 'Email is required';
+        } else {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(trimmedValue)) {
+            fieldError = 'Please enter a valid email address';
+          }
+        }
+        break;
+      case 'password':
+        if (!value) {
+          fieldError = 'Password is required';
+        } else if (value.length < 8) {
+          fieldError = 'Password must be at least 8 characters';
+        }
+        break;
+      case 'role':
+        if (!value) {
+          fieldError = 'Please select your role';
+        }
+        break;
+      default:
+        break;
+    }
+    
+    // Add error if validation failed
+    if (fieldError) {
+      newErrors[name] = fieldError;
+    }
+    
+    // Update errors state
+    setErrors(newErrors);
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email) {
+    // Email validation
+    if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        newErrors.email = 'Please enter a valid email address (name@domain.com)';
+      }
     }
 
+    // Password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
 
+    // Role validation
     if (!formData.role) {
       newErrors.role = 'Please select your role';
+    } else if (!['user', 'employee', 'admin'].includes(formData.role)) {
+      newErrors.role = 'Please select a valid role';
     }
 
     setErrors(newErrors);

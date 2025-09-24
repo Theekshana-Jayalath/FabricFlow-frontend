@@ -52,89 +52,349 @@ function Register() {
     { value: 'Designer', label: 'Designer' },
     { value: 'Supervisor', label: 'Supervisor' },
     { value: 'Operator', label: 'Operator' },
-    { value: 'Maintenance', label: 'Maintenance' }
+    { value: 'Maintenance', label: 'Maintenance' },
+    { value: 'Driver', label: 'Driver' }
   ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Update form data
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+    
+    // Real-time validation
+    const newErrors = { ...errors };
+    
+    // Clear existing error for this field
+    if (newErrors[name]) {
+      delete newErrors[name];
     }
+    
+    // Validate the current field in real-time
+    let fieldError = '';
+    
+    switch (name) {
+      case 'empId':
+        fieldError = validateEmployeeId(value);
+        break;
+      case 'name':
+      case 'empName':
+        fieldError = validateName(value);
+        break;
+      case 'gmail':
+      case 'emailAddress':
+        fieldError = validateEmail(value);
+        break;
+      case 'jobPosition':
+        fieldError = validateJobPosition(value);
+        break;
+      case 'phone':
+      case 'empPhone':
+        fieldError = validatePhone(value);
+        break;
+      case 'address':
+        fieldError = validateAddress(value);
+        break;
+      case 'age':
+        fieldError = validateAge(value, formData.dob);
+        break;
+      case 'gender':
+        fieldError = validateGender(value);
+        break;
+      case 'dob':
+        fieldError = validateDateOfBirth(value);
+        // Also revalidate age if DOB changes
+        if (!fieldError && formData.age) {
+          const ageError = validateAge(formData.age, value);
+          if (ageError && ageError.includes('date of birth')) {
+            newErrors.age = ageError;
+          } else if (newErrors.age && newErrors.age.includes('date of birth')) {
+            delete newErrors.age;
+          }
+        }
+        break;
+      case 'password':
+        fieldError = validatePassword(value);
+        // Also revalidate confirm password if it exists
+        if (formData.confirmPassword) {
+          const confirmError = validateConfirmPassword(formData.confirmPassword, value);
+          if (confirmError) {
+            newErrors.confirmPassword = confirmError;
+          } else {
+            delete newErrors.confirmPassword;
+          }
+        }
+        break;
+      case 'confirmPassword':
+        fieldError = validateConfirmPassword(value, formData.password);
+        break;
+      default:
+        break;
+    }
+    
+    // Add error if validation failed
+    if (fieldError) {
+      newErrors[name] = fieldError;
+    }
+    
+    // Update errors state
+    setErrors(newErrors);
+  };
+
+  // Validation helper functions
+  const validateEmployeeId = (empId) => {
+    if (!empId.trim()) {
+      return 'Employee ID is required';
+    }
+    if (!/^[a-zA-Z0-9]{4,10}$/.test(empId.trim())) {
+      return 'Employee ID must be 4-10 alphanumeric characters only';
+    }
+    return '';
+  };
+
+  const validateName = (name) => {
+    if (!name.trim()) {
+      return 'Name is required';
+    }
+    if (name.trim().length < 3) {
+      return 'Name must be at least 3 characters';
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
+      return 'Name can only contain letters and spaces';
+    }
+    return '';
+  };
+
+  const validateEmail = (email) => {
+    if (!email.trim()) {
+      return 'Email is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address (name@domain.com)';
+    }
+    return '';
+  };
+
+  const validateJobPosition = (jobPosition) => {
+    if (!jobPosition || jobPosition === '') {
+      return 'Please select a job position';
+    }
+    return '';
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone.trim()) {
+      return 'Phone number is required';
+    }
+    // Allow formats: +94xxxxxxxxx or 0xxxxxxxxx or xxxxxxxxx
+    const phoneRegex = /^(\+94|0)?[0-9]{9,10}$/;
+    if (!phoneRegex.test(phone.trim().replace(/\s/g, ''))) {
+      return 'Please enter a valid phone number (10 digits)';
+    }
+    return '';
+  };
+
+  const validateAddress = (address) => {
+    if (!address.trim()) {
+      return 'Address is required';
+    }
+    if (address.trim().length < 5) {
+      return 'Address must be at least 5 characters';
+    }
+    // Allow letters, numbers, spaces, commas, dots, slashes - no special chars
+    if (!/^[a-zA-Z0-9\s,./\-]+$/.test(address.trim())) {
+      return 'Address contains invalid characters';
+    }
+    return '';
+  };
+
+  const validateAge = (age, dob = null) => {
+    if (!age) {
+      return 'Age is required';
+    }
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum) || ageNum < 18 || ageNum > 60) {
+      return 'Age must be between 18 and 60 years';
+    }
+    
+    // Cross-validation with DOB if provided
+    if (dob) {
+      const birthDate = new Date(dob);
+      const today = new Date();
+      const calculatedAge = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+      if (Math.abs(calculatedAge - ageNum) > 1) {
+        return 'Age does not match date of birth';
+      }
+    }
+    return '';
+  };
+
+  const validateGender = (gender) => {
+    if (!gender || gender === '') {
+      return 'Please select your gender';
+    }
+    if (!['male', 'female', 'other'].includes(gender)) {
+      return 'Please select a valid gender option';
+    }
+    return '';
+  };
+
+  const validateDateOfBirth = (dob) => {
+    if (!dob) {
+      return 'Date of birth is required';
+    }
+    const birthDate = new Date(dob);
+    const today = new Date();
+    
+    if (birthDate >= today) {
+      return 'Date of birth cannot be in the future';
+    }
+    
+    const age = Math.floor((today - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 18 || age > 60) {
+      return 'Age must be between 18 and 60 years';
+    }
+    return '';
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (!hasUppercase) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!hasLowercase) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!hasNumber) {
+      return 'Password must contain at least one number';
+    }
+    if (!hasSpecialChar) {
+      return 'Password must contain at least one special character';
+    }
+    
+    // Common passwords check
+    const commonPasswords = ['password', '12345678', 'password123', 'admin123', 'qwerty123'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+      return 'Please choose a more secure password';
+    }
+    
+    return '';
+  };
+
+  const validateConfirmPassword = (confirmPassword, password) => {
+    if (!confirmPassword) {
+      return 'Please confirm your password';
+    }
+    if (confirmPassword !== password) {
+      return 'Passwords do not match';
+    }
+    return '';
   };
 
   const validateForm = () => {
     const newErrors = {};
 
+    // Trim all string inputs
+    const trimmedData = {
+      ...formData,
+      name: formData.name?.trim(),
+      empName: formData.empName?.trim(),
+      empId: formData.empId?.trim(),
+      gmail: formData.gmail?.trim(),
+      emailAddress: formData.emailAddress?.trim(),
+      phone: formData.phone?.trim(),
+      empPhone: formData.empPhone?.trim(),
+      address: formData.address?.trim()
+    };
+
     // Common validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
     if (!formData.role) {
       newErrors.role = 'Please select a role';
     }
 
+    // Password validation (common for all roles)
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
+    }
+
+    const confirmPasswordError = validateConfirmPassword(formData.confirmPassword, formData.password);
+    if (confirmPasswordError) {
+      newErrors.confirmPassword = confirmPasswordError;
+    }
+
     // Role-specific validation
     if (formData.role === 'user') {
-      if (!formData.name.trim()) {
-        newErrors.name = 'Name is required';
-      }
-      if (!formData.gmail) {
-        newErrors.gmail = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.gmail)) {
-        newErrors.gmail = 'Email is invalid';
-      }
-      if (!formData.age) {
-        newErrors.age = 'Age is required';
-      } else if (formData.age < 1 || formData.age > 120) {
-        newErrors.age = 'Please enter a valid age';
-      }
-      if (!formData.address.trim()) {
-        newErrors.address = 'Address is required';
-      }
+      const nameError = validateName(trimmedData.name);
+      if (nameError) newErrors.name = nameError;
+
+      const emailError = validateEmail(trimmedData.gmail);
+      if (emailError) newErrors.gmail = emailError;
+
+      const phoneError = validatePhone(trimmedData.phone);
+      if (phoneError) newErrors.phone = phoneError;
+
+      const addressError = validateAddress(trimmedData.address);
+      if (addressError) newErrors.address = addressError;
+
+      const ageError = validateAge(formData.age, formData.dob);
+      if (ageError) newErrors.age = ageError;
+
+      const genderError = validateGender(formData.gender);
+      if (genderError) newErrors.gender = genderError;
+
+      const dobError = validateDateOfBirth(formData.dob);
+      if (dobError) newErrors.dob = dobError;
+
     } else if (formData.role === 'employee') {
-      if (!formData.empId.trim()) {
-        newErrors.empId = 'Employee ID is required';
-      }
-      if (!formData.empName.trim()) {
-        newErrors.empName = 'Employee name is required';
-      }
-      if (!formData.emailAddress) {
-        newErrors.emailAddress = 'Email address is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.emailAddress)) {
-        newErrors.emailAddress = 'Email is invalid';
-      }
-      if (!formData.jobPosition) {
-        newErrors.jobPosition = 'Job position is required';
-      }
-      if (!formData.address.trim()) {
-        newErrors.address = 'Address is required';
-      }
+      const empIdError = validateEmployeeId(trimmedData.empId);
+      if (empIdError) newErrors.empId = empIdError;
+
+      const empNameError = validateName(trimmedData.empName);
+      if (empNameError) newErrors.empName = empNameError;
+
+      const emailError = validateEmail(trimmedData.emailAddress);
+      if (emailError) newErrors.emailAddress = emailError;
+
+      const jobPositionError = validateJobPosition(formData.jobPosition);
+      if (jobPositionError) newErrors.jobPosition = jobPositionError;
+
+      const phoneError = validatePhone(trimmedData.empPhone);
+      if (phoneError) newErrors.empPhone = phoneError;
+
+      const addressError = validateAddress(trimmedData.address);
+      if (addressError) newErrors.address = addressError;
+
+      const ageError = validateAge(formData.age, formData.dob);
+      if (ageError) newErrors.age = ageError;
+
+      const genderError = validateGender(formData.gender);
+      if (genderError) newErrors.gender = genderError;
+
+      const dobError = validateDateOfBirth(formData.dob);
+      if (dobError) newErrors.dob = dobError;
+
     } else if (formData.role === 'admin') {
-      if (!formData.name.trim()) {
-        newErrors.name = 'Name is required';
-      }
-      if (!formData.gmail) {
-        newErrors.gmail = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.gmail)) {
-        newErrors.gmail = 'Email is invalid';
-      }
+      const nameError = validateName(trimmedData.name);
+      if (nameError) newErrors.name = nameError;
+
+      const emailError = validateEmail(trimmedData.gmail);
+      if (emailError) newErrors.gmail = emailError;
     }
 
     setErrors(newErrors);

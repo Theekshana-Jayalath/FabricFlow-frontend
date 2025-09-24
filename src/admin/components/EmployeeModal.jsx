@@ -55,7 +55,8 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
     'Assistant',
     'Intern',
     'Consultant',
-    'Specialist'
+    'Specialist',
+    'Driver'
   ];
 
   const statusOptions = ['Active', 'Inactive', 'On Leave', 'Terminated'];

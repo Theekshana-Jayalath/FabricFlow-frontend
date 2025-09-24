@@ -76,7 +76,8 @@ const EmployeeViewEditModal = ({ open, onClose, employee, mode, onEmployeeUpdate
     'Consultant',
     'Specialist',
     'Operator',
-    'Technician'
+    'Technician',
+    'Driver'
   ];
 
   const statusOptions = ['Active', 'Inactive', 'On Leave', 'Terminated'];
