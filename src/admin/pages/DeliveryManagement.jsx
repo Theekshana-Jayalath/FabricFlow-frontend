@@ -1,43 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Button, 
-  CircularProgress, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  TextField, 
-  IconButton, 
-  Chip,
-  Grid,
-  Card,
-  CardContent,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
-  Snackbar
-} from '@mui/material';
-import { 
-  LocalShipping, 
-  Person, 
-  Assignment, 
-  CheckCircle, 
-  Close, 
-  Refresh,
-  Visibility,
-  AssignmentInd
-} from '@mui/icons-material';
 import axios from 'axios';
 
 const DeliveryManagement = () => {
@@ -45,14 +6,6 @@ const DeliveryManagement = () => {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [selectedDriver, setSelectedDriver] = useState('');
-  const [assignedBy, setAssignedBy] = useState('');
-  const [notes, setNotes] = useState('');
-  const [assignLoading, setAssignLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const [justAssigned, setJustAssigned] = useState({}); // orderId -> driver display name
 
   useEffect(() => {
     fetchShippedOrders();
@@ -91,55 +44,6 @@ const DeliveryManagement = () => {
     }
   };
 
-
-  const handleAssignDelivery = (order) => {
-    setSelectedOrder(order);
-    setSelectedDriver('');
-    setNotes('');
-    setAssignedBy('Distribution Manager'); // You can make this dynamic
-    setAssignDialogOpen(true);
-  };
-
-  const handleConfirmAssign = async () => {
-    if (!selectedDriver) {
-      setSnackbar({ open: true, message: 'Please select a driver', severity: 'error' });
-      return;
-    }
-
-    setAssignLoading(true);
-    try {
-      const response = await axios.post('/api/distributions/assign', {
-        orderId: selectedOrder._id,
-        driverId: selectedDriver,
-        assignedBy: assignedBy,
-        notes: notes
-      });
-
-      if (response.data.message === 'Delivery assigned successfully.') {
-        const assignedDriverObj = (response.data.data && response.data.data.driver) ||
-          drivers.find(d => d._id === selectedDriver);
-        const driverName = assignedDriverObj ? `${assignedDriverObj.firstName} ${assignedDriverObj.lastName}` : 'Driver';
-        setJustAssigned(prev => ({ ...prev, [selectedOrder._id]: driverName }));
-
-        setSnackbar({ open: true, message: 'Delivery assigned successfully!', severity: 'success' });
-        setAssignDialogOpen(false);
-
-        // Give a brief moment to display the assigned state before the item disappears
-        setTimeout(() => {
-          fetchShippedOrders(); // Refresh the list (this will remove the assigned order)
-        }, 600);
-      }
-    } catch (err) {
-      setSnackbar({ 
-        open: true, 
-        message: err.response?.data?.message || 'Failed to assign delivery', 
-        severity: 'error' 
-      });
-    } finally {
-      setAssignLoading(false);
-    }
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -169,339 +73,190 @@ const DeliveryManagement = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-        <CircularProgress size={60} />
-      </Box>
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#005A54]"></div>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: { xs: 1, md: 4 } }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box>
-          <Typography variant="h4" fontWeight={700} color="#005A54">
+    <div className="p-4 md:p-16">
+      <div className="flex justify-between items-center mb-12">
+        <div>
+          <h1 className="text-4xl font-bold text-[#005A54] mb-2">
             Delivery Management
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Assign SHIPPED orders to drivers for delivery
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<Refresh />}
+          </h1>
+          <p className="text-gray-600">
+            View SHIPPED orders ready for delivery
+          </p>
+        </div>
+        <button
           onClick={fetchShippedOrders}
-          sx={{ bgcolor: '#005A54', '&:hover': { bgcolor: '#004d47' } }}
+          className="flex items-center px-4 py-2 bg-[#005A54] text-white rounded-lg hover:bg-[#004d47] transition-colors"
         >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
           Refresh
-        </Button>
-      </Box>
+        </button>
+      </div>
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <LocalShipping sx={{ fontSize: 40, mr: 2 }} />
-                <Box>
-                  <Typography variant="h4" fontWeight={700}>
-                    {shippedOrders.length}
-                  </Typography>
-                  <Typography variant="body2">
-                    Orders Ready for Delivery
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ bgcolor: 'success.main', color: 'white' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <Person sx={{ fontSize: 40, mr: 2 }} />
-                <Box>
-                  <Typography variant="h4" fontWeight={700}>
-                    {drivers.filter(d => d.status === 'active').length}
-                  </Typography>
-                  <Typography variant="body2">
-                    Active Drivers
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ bgcolor: 'warning.main', color: 'white' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <Assignment sx={{ fontSize: 40, mr: 2 }} />
-                <Box>
-                  <Typography variant="h4" fontWeight={700}>
-                    {shippedOrders.reduce((sum, order) => sum + order.totalAmount, 0).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2">
-                    Total Value (USD)
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ bgcolor: 'info.main', color: 'white' }}>
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <CheckCircle sx={{ fontSize: 40, mr: 2 }} />
-                <Box>
-                  <Typography variant="h4" fontWeight={700}>
-                    {shippedOrders.length > 0 ? Math.round((shippedOrders.length / shippedOrders.length) * 100) : 0}%
-                  </Typography>
-                  <Typography variant="body2">
-                    Ready for Assignment
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+        <div className="bg-blue-600 text-white rounded-lg p-6">
+          <div className="flex items-center">
+            <svg className="w-10 h-10 mr-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20,8h-3V4H3C1.89,4 1,4.89 1,6v11h2c0,1.66 1.34,3 3,3s3-1.34 3-3h6c0,1.66 1.34,3 3,3s3-1.34 3-3h2v-5L20,8zM6,18.5c-0.83,0 -1.5,-0.67 -1.5,-1.5s0.67,-1.5 1.5,-1.5s1.5,0.67 1.5,1.5S6.83,18.5 6,18.5zM18,18.5c-0.83,0 -1.5,-0.67 -1.5,-1.5s0.67,-1.5 1.5,-1.5s1.5,0.67 1.5,1.5S18.83,18.5 18,18.5zM19,13H5V6h14V13z"/>
+            </svg>
+            <div>
+              <h2 className="text-4xl font-bold">
+                {shippedOrders.length}
+              </h2>
+              <p className="text-sm">
+                Orders Ready for Delivery
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-green-600 text-white rounded-lg p-6">
+          <div className="flex items-center">
+            <svg className="w-10 h-10 mr-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4s-4,1.79 -4,4S9.79,12 12,12zM21,9v3l-2,-1v4c0,1.1 -0.9,2 -2,2l-2,0v-2l2,0v-2.5l-1.5,0.75V9l3.5,-1.5V3l-2,0v-1h2C21.1,2 21,2.9 21,4v2l2,1v2H21zM9,13c-2.67,0 -8,1.34 -8,4v3h16v-3C17,14.34 11.67,13 9,13z"/>
+            </svg>
+            <div>
+              <h2 className="text-4xl font-bold">
+                {drivers.filter(d => d.status === 'active').length}
+              </h2>
+              <p className="text-sm">
+                Active Drivers
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-amber-600 text-white rounded-lg p-6">
+          <div className="flex items-center">
+            <svg className="w-10 h-10 mr-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19,3H5C3.9,3 3,3.9 3,5v14c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2V5C21,3.9 20.1,3 19,3zM19,19H5V5h14V19zM17,12H7v-2h10V12zM15,16H7v-2h8V16zM17,8H7V6h10V8z"/>
+            </svg>
+            <div>
+              <h2 className="text-4xl font-bold">
+                {shippedOrders.reduce((sum, order) => sum + order.totalAmount, 0).toLocaleString()}
+              </h2>
+              <p className="text-sm">
+                Total Value (USD)
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-cyan-600 text-white rounded-lg p-6">
+          <div className="flex items-center">
+            <svg className="w-10 h-10 mr-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10s10,-4.48 10,-10S17.52,2 12,2zM10,17l-5,-5l1.41,-1.41L10,14.17l7.59,-7.59L19,8L10,17z"/>
+            </svg>
+            <div>
+              <h2 className="text-4xl font-bold">
+                {shippedOrders.length > 0 ? Math.round((shippedOrders.length / shippedOrders.length) * 100) : 0}%
+              </h2>
+              <p className="text-sm">
+                Ready for Assignment
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Orders Table */}
-      <Paper sx={{ borderRadius: 2, boxShadow: 2, overflow: 'hidden' }}>
-        <TableContainer>
-          <Table>
-            <TableHead sx={{ bgcolor: '#f3f4f6' }}>
-              <TableRow>
-                <TableCell><strong>Order Details</strong></TableCell>
-                <TableCell><strong>Customer</strong></TableCell>
-                <TableCell><strong>Amount</strong></TableCell>
-                <TableCell><strong>Order Date</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
-                <TableCell><strong>Actions</strong></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <strong>Order Details</strong>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <strong>Customer</strong>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <strong>Amount</strong>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <strong>Order Date</strong>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <strong>Status</strong>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {shippedOrders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography variant="h6" color="text.secondary">
+                <tr>
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <h3 className="text-xl font-semibold text-gray-500 mb-2">
                       No SHIPPED orders available for delivery assignment
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    </h3>
+                    <p className="text-gray-400">
                       Orders marked as "SHIPPED" by the order manager will appear here
-                    </Typography>
-                  </TableCell>
-                </TableRow>
+                    </p>
+                  </td>
+                </tr>
               ) : (
                 shippedOrders.map((order) => (
-                  <TableRow key={order._id} hover>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={600}>
+                  <tr key={order._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
                           Order #{order.orderId}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        </p>
+                        <p className="text-sm text-gray-500">
                           {order.items.length} item(s)
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        </p>
+                        <p className="text-sm text-gray-500">
                           Payment: {order.paymentMethod} ({order.paymentStatus})
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={600}>
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
                           {order.customer.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        </p>
+                        <p className="text-sm text-gray-500">
                           {order.customer.email}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        </p>
+                        <p className="text-sm text-gray-500">
                           {order.customer.phone}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="subtitle2" fontWeight={600}>
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm font-semibold text-gray-900">
                         {formatCurrency(order.totalAmount)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm text-gray-900">
                         {formatDate(order.orderDate)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={order.orderStatus} 
-                        color={getStatusColor(order.orderStatus)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {justAssigned[order._id] ? (
-                        <Button
-                          variant="contained"
-                          disabled
-                          startIcon={<Person />}
-                          sx={{ bgcolor: 'success.main' }}
-                          size="small"
-                        >
-                          Assigned to {justAssigned[order._id]}
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="contained"
-                          startIcon={<AssignmentInd />}
-                          onClick={() => handleAssignDelivery(order)}
-                          sx={{ 
-                            bgcolor: '#005A54', 
-                            '&:hover': { bgcolor: '#004d47' }
-                          }}
-                          size="small"
-                        >
-                          Assign Driver
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        order.orderStatus === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
+                        order.orderStatus === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                        order.orderStatus === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.orderStatus}
+                      </span>
+                    </td>
+                  </tr>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-
-      {/* Assign Delivery Dialog */}
-      <Dialog open={assignDialogOpen} onClose={() => setAssignDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#005A54', color: 'white' }}>
-          <AssignmentInd />
-          Assign Delivery
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          {selectedOrder && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Order Details
-              </Typography>
-              <Grid container spacing={2} mb={3}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Order ID"
-                    value={selectedOrder.orderId}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Customer Name"
-                    value={selectedOrder.customer.name}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Total Amount"
-                    value={formatCurrency(selectedOrder.totalAmount)}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Order Date"
-                    value={formatDate(selectedOrder.orderDate)}
-                    fullWidth
-                    InputProps={{ readOnly: true }}
-                    variant="outlined"
-                  />
-                </Grid>
-              </Grid>
-
-              <Typography variant="h6" gutterBottom>
-                Assignment Details
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Select Driver</InputLabel>
-                    <Select
-                      value={selectedDriver}
-                      onChange={(e) => setSelectedDriver(e.target.value)}
-                      label="Select Driver"
-                    >
-                      {drivers
-                        .filter(driver => driver.status === 'active')
-                        .map((driver) => (
-                          <MenuItem key={driver._id} value={driver._id}>
-                            {driver.firstName} {driver.lastName} - {driver.driverId}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Assigned By"
-                    value={assignedBy}
-                    onChange={(e) => setAssignedBy(e.target.value)}
-                    fullWidth
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Notes (Optional)"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    variant="outlined"
-                    placeholder="Add any special delivery instructions..."
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setAssignDialogOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmAssign}
-            variant="contained"
-            disabled={assignLoading || !selectedDriver}
-            sx={{ bgcolor: '#005A54', '&:hover': { bgcolor: '#004d47' } }}
-          >
-            {assignLoading ? <CircularProgress size={20} /> : 'Assign Delivery'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 

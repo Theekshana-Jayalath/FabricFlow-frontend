@@ -101,6 +101,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       onClick: () => setSalesDistributionOpen(!salesDistributionOpen),
       subItems: [
         { text: 'All Drivers', path: '/admin/sales/drivers', icon: <Analytics /> },
+        { text: 'Vehicle Management', path: '/admin/sales/vehicles', icon: <LocalShipping /> },
         { text: 'Delivery Management', path: '/admin/delivery/management', icon: <LocalShipping /> },
         { text: 'All Delivery Orders', path: '/admin/orders/all-delivery-orders', icon: <Assignment /> },
         { text: 'Asign Orders', path: '/admin/sales/asignOrders', icon: <People /> },

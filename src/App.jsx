@@ -27,6 +27,7 @@ import EmployeeTable from "./admin/components/EmployeeTable";
 import Charts from "./admin/components/Charts";
 import Widgets from "./admin/components/Widgets";
 import AllDrivers from "./admin/pages/AllDrivers";
+import VehicleManagement from "./admin/pages/VehicleManagement";
 import DeliveryManagement from "./admin/pages/DeliveryManagement";
 import AllOrders from "./admin/pages/AllOrders";
 import AddDriver from "./admin/pages/AddDriver";
@@ -173,6 +174,10 @@ function AppContent() {
           <Route 
             path="sales/drivers/add" 
             element={<AddDriver />} 
+          />
+          <Route 
+            path="sales/vehicles" 
+            element={<VehicleManagement />} 
           />
           <Route 
             path="delivery/management" 
