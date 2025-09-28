@@ -27,6 +27,9 @@ import EmployeeTable from "./admin/components/EmployeeTable";
 import Charts from "./admin/components/Charts";
 import Widgets from "./admin/components/Widgets";
 import AllDrivers from "./admin/pages/AllDrivers";
+import DeliveryManagement from "./admin/pages/DeliveryManagement";
+import AllOrders from "./admin/pages/AllOrders";
+import AddDriver from "./admin/pages/AddDriver";
 
 function App() {
   return (
@@ -166,6 +169,18 @@ function AppContent() {
           <Route 
             path="sales/drivers" 
             element={<AllDrivers />} 
+          />
+          <Route 
+            path="sales/drivers/add" 
+            element={<AddDriver />} 
+          />
+          <Route 
+            path="delivery/management" 
+            element={<DeliveryManagement />} 
+          />
+          <Route 
+            path="orders/all-delivery-orders" 
+            element={<AllOrders />} 
           />
         </Route>
 

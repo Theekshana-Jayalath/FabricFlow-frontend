@@ -253,6 +253,14 @@ const AllDrivers = () => {
           >
             Download Report
           </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/admin/sales/drivers/add')}
+            sx={{ bgcolor: '#005A54', '&:hover': { bgcolor: '#004d47' } }}
+          >
+            Add Driver
+          </Button>
         </Box>
       </Box>
 

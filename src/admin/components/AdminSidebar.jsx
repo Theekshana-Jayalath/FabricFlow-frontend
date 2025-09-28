@@ -12,7 +12,8 @@ import {
   Assessment,
   LocalShipping,
   Analytics,
-  ShoppingCart
+  ShoppingCart,
+  Assignment
 } from '@mui/icons-material';
 import {
   Drawer,
@@ -99,11 +100,11 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: salesDistributionOpen,
       onClick: () => setSalesDistributionOpen(!salesDistributionOpen),
       subItems: [
-  { text: 'All Drivers', path: '/admin/sales/drivers', icon: <Analytics /> },
-        { text: 'Customer Management', path: '/admin/sales/customers', icon: <People /> },
-        { text: 'Order Processing', path: '/admin/sales/orders', icon: <ShoppingCart /> },
-        { text: 'Distribution Centers', path: '/admin/distribution/centers', icon: <LocalShipping /> },
-        { text: 'Logistics Tracking', path: '/admin/distribution/tracking', icon: <LocalShipping /> }
+        { text: 'All Drivers', path: '/admin/sales/drivers', icon: <Analytics /> },
+        { text: 'Delivery Management', path: '/admin/delivery/management', icon: <LocalShipping /> },
+        { text: 'All Delivery Orders', path: '/admin/orders/all-delivery-orders', icon: <Assignment /> },
+        { text: 'Asign Orders', path: '/admin/sales/asignOrders', icon: <People /> },
+        
       ]
     }
   ];
