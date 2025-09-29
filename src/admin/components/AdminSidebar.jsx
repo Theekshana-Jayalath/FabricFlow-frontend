@@ -84,10 +84,11 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: inventoryOpen,
       onClick: () => setInventoryOpen(!inventoryOpen),
       subItems: [
-        { text: 'Stock Management', path: '/admin/inventory/stock', icon: <Inventory /> },
-        { text: 'Material Tracking', path: '/admin/inventory/materials', icon: <Inventory /> },
-        { text: 'Quality Control', path: '/admin/inventory/quality', icon: <Assessment /> },
-        { text: 'Supplier Management', path: '/admin/inventory/suppliers', icon: <People /> }
+        { text: 'Dashboard', path: '/admin/inventory/dashboard', icon: <Inventory /> },
+        { text: 'Material', path: '/admin/inventory/materials', icon: <Inventory /> },
+        { text: 'Purchase', path: '/admin/inventory/purchase', icon: <Assessment /> },
+        { text: 'Supplier', path: '/admin/inventory/suppliers', icon: <People /> },
+        { text: 'Reports', path: '/admin/inventory/reports', icon: <People /> }
       ]
     },
     {
