@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import { FaSave, FaArrowLeft, FaPlus, FaMinus, FaShoppingCart, FaDownload, FaFilePdf } from "react-icons/fa";
+import { FaSave, FaArrowLeft, FaPlus, FaMinus, FaShoppingCart, FaDownload, FaFilePdf, FaUser, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -287,10 +288,13 @@ const getFabricBreakdown = (items) => {
 function AddNewOrder() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated, getDisplayName } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showDateWarning, setShowDateWarning] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [cartDataApplied, setCartDataApplied] = useState(false);
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [customerDataLoaded, setCustomerDataLoaded] = useState(false);
 
   // Validation error states
   const [validationErrors, setValidationErrors] = useState({
@@ -519,6 +523,30 @@ function AddNewOrder() {
       deliveryDate: deliveryDate
     }));
   }, []);
+
+  // Auto-populate customer information from authenticated user
+  useEffect(() => {
+    if (isAuthenticated && user && !customerDataLoaded) {
+      console.log("Auto-populating customer data from user:", user);
+      
+      setFormData(prev => ({
+        ...prev,
+        customer: {
+          name: getDisplayName() || user.firstName + " " + user.lastName || user.name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          shippingAddress: {
+            street: user.address?.street || "",
+            city: user.address?.city || "",
+            postalCode: user.address?.postalCode || ""
+          }
+        }
+      }));
+      
+      setCustomerDataLoaded(true);
+      console.log("Customer data auto-populated");
+    }
+  }, [isAuthenticated, user, customerDataLoaded, getDisplayName]);
 
   // Auto-fill order items when cart data is passed from ProductDetails
   useEffect(() => {
@@ -847,8 +875,8 @@ function AddNewOrder() {
       console.log("Order created successfully:", response.data);
       alert("Order created successfully!");
 
-      // Redirect back to order details
-      navigate('/order-details');
+      // Order created successfully - no navigation, just show popup
+      // User can manually navigate or use the back button if needed
     } catch (error) {
       console.error("Error creating order:", error);
 
@@ -870,7 +898,37 @@ function AddNewOrder() {
   };
 
   const handleBack = () => {
-    navigate('/order-details');
+    navigate('/products');
+  };
+
+  // Handle customer editing toggle
+  const toggleCustomerEdit = () => {
+    setIsEditingCustomer(!isEditingCustomer);
+  };
+
+  // Save customer edits
+  const saveCustomerEdits = () => {
+    setIsEditingCustomer(false);
+  };
+
+  // Cancel customer edits and reset to original data
+  const cancelCustomerEdits = () => {
+    if (isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        customer: {
+          name: getDisplayName() || user.firstName + " " + user.lastName || user.name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          shippingAddress: {
+            street: user.address?.street || "",
+            city: user.address?.city || "",
+            postalCode: user.address?.postalCode || ""
+          }
+        }
+      }));
+    }
+    setIsEditingCustomer(false);
   };
 
   return (
@@ -951,117 +1009,244 @@ function AddNewOrder() {
           </div>
 
           {/* Customer Information */}
-          <div className="border border-gray-200 rounded-lg p-6 bg-white">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Customer Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Customer Name * <span className="text-xs text-gray-500">(2-50 chars, letters only)</span>
-                </label>
-                <input
-                  type="text"
-                  name="customer.name"
-                  value={formData.customer.name || ""}
-                  onChange={handleInputChange}
-                  required
-                  maxLength="50"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerName)}`}
-                  placeholder="Enter full name (letters and spaces only)"
-                />
-                <ValidationErrors errors={validationErrors.customerName} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email * <span className="text-xs text-gray-500">(max 100 chars)</span>
-                </label>
-                <input
-                  type="email"
-                  name="customer.email"
-                  value={formData.customer.email || ""}
-                  onChange={handleInputChange}
-                  required
-                  maxLength="100"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerEmail)}`}
-                  placeholder="example@domain.com (no spaces)"
-                />
-                <ValidationErrors errors={validationErrors.customerEmail} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number * <span className="text-xs text-gray-500">(10 digits, no repeating digits)</span>
-                </label>
-                <input
-                  type="tel"
-                  name="customer.phone"
-                  value={formData.customer.phone || ""}
-                  onChange={handleInputChange}
-                  required
-                  maxLength="10"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerPhone)}`}
-                  placeholder="Enter 10-digit number (e.g., 0712345678 or 7123456789)"
-                  pattern="[0-9]{10}"
-                />
-                <ValidationErrors errors={validationErrors.customerPhone} />
-                {formData.customer.phone && formData.customer.phone.length === 10 && validationErrors.customerPhone.length === 0 && (
-                  <p className="text-sm text-green-600 mt-1">✓ Valid phone number</p>
-                )}
+          <div className="border border-gray-200 rounded-lg bg-white shadow-sm">
+            {/* Customer Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FaUser className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Customer Information</h3>
+                    {isAuthenticated && user && (
+                      <p className="text-sm text-gray-600">
+                        Welcome, {getDisplayName()}! Your details are auto-filled.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {!isEditingCustomer ? (
+                    <button
+                      type="button"
+                      onClick={toggleCustomerEdit}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <FaEdit className="w-4 h-4" />
+                      <span>Edit</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={saveCustomerEdits}
+                        className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      >
+                        <FaCheck className="w-4 h-4" />
+                        <span>Save</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelCustomerEdits}
+                        className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <FaTimes className="w-4 h-4" />
+                        <span>Cancel</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Shipping Address */}
-          <div className="border border-gray-200 rounded-lg p-6 bg-white">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">Shipping Address</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Street Address * <span className="text-xs text-gray-500">(5-200 chars)</span>
-                </label>
-                <input
-                  type="text"
-                  name="customer.shippingAddress.street"
-                  value={formData.customer.shippingAddress.street || ""}
-                  onChange={handleInputChange}
-                  required
-                  maxLength="200"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.streetAddress)}`}
-                  placeholder="123 Main Street, Apt 4B"
-                />
-                <ValidationErrors errors={validationErrors.streetAddress} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  City * <span className="text-xs text-gray-500">(2-50 chars, letters only)</span>
-                </label>
-                <input
-                  type="text"
-                  name="customer.shippingAddress.city"
-                  value={formData.customer.shippingAddress.city || ""}
-                  onChange={handleInputChange}
-                  required
-                  maxLength="50"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.city)}`}
-                  placeholder="Enter city name"
-                />
-                <ValidationErrors errors={validationErrors.city} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Postal Code * <span className="text-xs text-gray-500">(5 digits)</span>
-                </label>
-                <input
-                  type="text"
-                  name="customer.shippingAddress.postalCode"
-                  value={formData.customer.shippingAddress.postalCode || ""}
-                  onChange={handleInputChange}
-                  required
-                  maxLength="5"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.postalCode)}`}
-                  placeholder="Enter 5-digit postal code"
-                  pattern="[0-9]{5}"
-                />
-                <ValidationErrors errors={validationErrors.postalCode} />
-              </div>
+            {/* Customer Details */}
+            <div className="p-6">
+              {!isEditingCustomer ? (
+                /* Display Mode */
+                <div className="space-y-6">
+                  {/* Personal Information Display */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Customer Name</label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formData.customer.name || "Not provided"}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Email Address</label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formData.customer.email || "Not provided"}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formData.customer.phone || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Shipping Address Display */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Shipping Address</label>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {formData.customer.shippingAddress.street && formData.customer.shippingAddress.city ? (
+                        <div className="space-y-1">
+                          <p>{formData.customer.shippingAddress.street}</p>
+                          <p>
+                            {formData.customer.shippingAddress.city}
+                            {formData.customer.shippingAddress.postalCode && (
+                              <span> - {formData.customer.shippingAddress.postalCode}</span>
+                            )}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">Address not provided</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status Indicators */}
+                  <div className="flex flex-wrap gap-2">
+                    {formData.customer.name && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ Name provided
+                      </span>
+                    )}
+                    {formData.customer.email && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ Email provided
+                      </span>
+                    )}
+                    {formData.customer.phone && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ Phone provided
+                      </span>
+                    )}
+                    {formData.customer.shippingAddress.street && formData.customer.shippingAddress.city && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ Address provided
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Edit Mode */
+                <div className="space-y-6">
+                  {/* Personal Information Editing */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Customer Name * <span className="text-xs text-gray-500">(2-50 chars, letters only)</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="customer.name"
+                        value={formData.customer.name || ""}
+                        onChange={handleInputChange}
+                        required
+                        maxLength="50"
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerName)}`}
+                        placeholder="Enter full name (letters and spaces only)"
+                      />
+                      <ValidationErrors errors={validationErrors.customerName} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email * <span className="text-xs text-gray-500">(max 100 chars)</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="customer.email"
+                        value={formData.customer.email || ""}
+                        onChange={handleInputChange}
+                        required
+                        maxLength="100"
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerEmail)}`}
+                        placeholder="example@domain.com (no spaces)"
+                      />
+                      <ValidationErrors errors={validationErrors.customerEmail} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number * <span className="text-xs text-gray-500">(10 digits, no repeating digits)</span>
+                      </label>
+                      <input
+                        type="tel"
+                        name="customer.phone"
+                        value={formData.customer.phone || ""}
+                        onChange={handleInputChange}
+                        required
+                        maxLength="10"
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerPhone)}`}
+                        placeholder="Enter 10-digit number (e.g., 0712345678)"
+                        pattern="[0-9]{10}"
+                      />
+                      <ValidationErrors errors={validationErrors.customerPhone} />
+                      {formData.customer.phone && formData.customer.phone.length === 10 && validationErrors.customerPhone.length === 0 && (
+                        <p className="text-sm text-green-600 mt-1">✓ Valid phone number</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Shipping Address Editing */}
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-700 mb-3">Shipping Address</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Street Address * <span className="text-xs text-gray-500">(5-200 chars)</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="customer.shippingAddress.street"
+                          value={formData.customer.shippingAddress.street || ""}
+                          onChange={handleInputChange}
+                          required
+                          maxLength="200"
+                          className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.streetAddress)}`}
+                          placeholder="123 Main Street, Apt 4B"
+                        />
+                        <ValidationErrors errors={validationErrors.streetAddress} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          City * <span className="text-xs text-gray-500">(2-50 chars, letters only)</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="customer.shippingAddress.city"
+                          value={formData.customer.shippingAddress.city || ""}
+                          onChange={handleInputChange}
+                          required
+                          maxLength="50"
+                          className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.city)}`}
+                          placeholder="Enter city name"
+                        />
+                        <ValidationErrors errors={validationErrors.city} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Postal Code * <span className="text-xs text-gray-500">(5 digits)</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="customer.shippingAddress.postalCode"
+                          value={formData.customer.shippingAddress.postalCode || ""}
+                          onChange={handleInputChange}
+                          required
+                          maxLength="5"
+                          className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.postalCode)}`}
+                          placeholder="Enter 5-digit postal code"
+                          pattern="[0-9]{5}"
+                        />
+                        <ValidationErrors errors={validationErrors.postalCode} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

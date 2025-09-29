@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -46,9 +46,7 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <AppContent />
       </CartProvider>
     </AuthProvider>
   );
@@ -215,6 +213,10 @@ function AppContent() {
           <Route 
             path="delivery/management" 
             element={<DeliveryManagement />} 
+          />
+          <Route 
+            path="orders/all" 
+            element={<OrderDetails />} 
           />
           <Route 
             path="orders/all-delivery-orders" 
