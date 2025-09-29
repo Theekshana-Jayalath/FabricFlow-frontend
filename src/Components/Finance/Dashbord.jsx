@@ -134,39 +134,6 @@ const FinanceDashboard = () => {
   return (
     <div className="flex h-screen bg-[#FEFAF4] font-sans">
       {/* Sidebar */}
-      <div className="w-64 bg-[#005a54] text-white shadow-lg p-5 flex flex-col">
-        <div className="text-2xl font-bold mb-8">Finance Admin</div>
-        <nav className="flex-1">
-          <ul className="space-y-3">
-            <li>
-              <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-[#107896] transition" onClick={() => navigate('/')}>
-                <span>🏠</span> Home
-              </button>
-            </li>
-            <li>
-              <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-[#107896] transition" onClick={() => navigate('/expenses')}>
-                <span>💰</span> Expenses
-              </button>
-            </li>
-            <li>
-              <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-[#107896] transition" onClick={() => navigate('/invoices')}>
-                <span>🧾</span> Invoices
-              </button>
-            </li>
-            <li>
-              <button className="flex items-center gap-2 w-full p-2 rounded hover:bg-[#107896] transition" onClick={() => navigate('/payroll')}>
-                <span>👥</span> Payroll
-              </button>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Logout */}
-        <button className="mt-auto flex items-center gap-2 w-full p-2 rounded hover:bg-[#dc2626] transition font-semibold" onClick={handleLogout}>
-          <FaSignOutAlt /> Logout
-        </button>
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Top Header */}

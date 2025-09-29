@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/Finance/addExpenses.css';
+import './addExpenses.css';
 
-const AddExpenses = () => {
+const FinanceAddExpenses = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     description: '',
@@ -106,4 +106,4 @@ const AddExpenses = () => {
   );
 };
 
-export default AddExpenses;
+export default FinanceAddExpenses;
