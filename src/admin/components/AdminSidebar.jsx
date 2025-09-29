@@ -73,8 +73,8 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: financeOpen,
       onClick: () => setFinanceOpen(!financeOpen),
       subItems: [
-        { text: 'Financial Overview', path: '/admin/finance/overview', icon: <Assessment /> },
-        { text: 'Revenue Reports', path: '/admin/finance/revenue', icon: <TrendingUp /> },
+        { text: 'Expenses', path: '/admin/finance/overview', icon: <Assessment /> },
+        { text: 'Report', path: '/admin/finance/revenue', icon: <TrendingUp /> },
         { text: 'Expense Tracking', path: '/admin/finance/expenses', icon: <AccountBalance /> },
         { text: 'Budget Planning', path: '/admin/finance/budget', icon: <Analytics /> }
       ]
