@@ -53,6 +53,7 @@ import Payroll from "./Components/Finance/Payroll";
 import FinanceReport from "./Components/Finance/Report";
 import AddExpenses from "./Components/Finance/addExpenses";
 import FinanceAddExpenses from "./Components/Finance/addExpenses";
+import UpdateExpense from "./Components/Finance/updateExpenses";
 
 
 function App() {
@@ -286,6 +287,10 @@ function AppContent() {
           <Route 
             path="/admin/finance/expenses/addExpenses" 
             element={<FinanceAddExpenses/>} 
+          />
+          <Route 
+            path="/admin/finance/expenses/updateExpenses" 
+            element={<UpdateExpense/>} 
           />
 
 
