@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import RouteTest from "./pages/RouteTest";
+import DriverDashboard from "./pages/DriverDashboard";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
@@ -26,6 +27,11 @@ import UserTable from "./admin/components/UserTable";
 import EmployeeTable from "./admin/components/EmployeeTable";
 import Charts from "./admin/components/Charts";
 import Widgets from "./admin/components/Widgets";
+import AllDrivers from "./admin/pages/AllDrivers";
+import VehicleManagement from "./admin/pages/VehicleManagement";
+import DeliveryManagement from "./admin/pages/DeliveryManagement";
+import AllOrders from "./admin/pages/AllOrders";
+import AddDriver from "./admin/pages/AddDriver";
 
 function App() {
   return (
@@ -128,6 +134,16 @@ function AppContent() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Driver Dashboard */}
+        <Route 
+          path="/driver/dashboard" 
+          element={
+            <ProtectedRoute requireAuth={true} requiredPermission="employee">
+              <DriverDashboard />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Admin routes - all require admin role */}
         <Route 
@@ -161,6 +177,26 @@ function AppContent() {
           <Route 
             path="widgets" 
             element={<Widgets />} 
+          />
+          <Route 
+            path="sales/drivers" 
+            element={<AllDrivers />} 
+          />
+          <Route 
+            path="sales/drivers/add" 
+            element={<AddDriver />} 
+          />
+          <Route 
+            path="sales/vehicles" 
+            element={<VehicleManagement />} 
+          />
+          <Route 
+            path="delivery/management" 
+            element={<DeliveryManagement />} 
+          />
+          <Route 
+            path="orders/all-delivery-orders" 
+            element={<AllOrders />} 
           />
         </Route>
 
