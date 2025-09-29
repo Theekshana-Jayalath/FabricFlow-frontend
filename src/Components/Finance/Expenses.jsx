@@ -139,16 +139,14 @@ const Expenses = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
-      {/* Sidebar */}
-     <aside className="w-64 bg-[#005a54] text-white shadow-lg flex flex-col">
-        <h2 className="text-2xl font-bold mb-6">Finance</h2>
+      <div>
         <button
           className="bg-[#10b981] p-2 rounded hover:bg-[#047857] mb-4"
           onClick={() => navigate("/admin/finance/expenses/addExpenses")}
         >
           ➕ Add Expense
         </button>
-      </aside>
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto space-y-8">

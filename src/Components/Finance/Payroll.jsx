@@ -287,9 +287,7 @@ const downloadPDF = (p) => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#005a54] text-white shadow-lg flex flex-col">
-        <h3 className="text-xl font-semibold mb-6">Payroll Menu</h3>
+      <div>
         <button
           className="w-full mb-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
           onClick={() => setShowForm(true)}
@@ -302,8 +300,8 @@ const downloadPDF = (p) => {
         >
           📊 Payroll Summary
         </button>
-      </aside>
-
+     
+</div>
       {/* Main content */}
       <main className="flex-1 p-6">
         <h2 className="text-2xl font-semibold mb-4">Payroll</h2>
