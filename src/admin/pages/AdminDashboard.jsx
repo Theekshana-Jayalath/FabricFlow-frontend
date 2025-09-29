@@ -119,7 +119,8 @@ const AdminDashboard = () => {
   };
 
   const handleUserUpdate = (updatedUser) => {
-    console.log('User created successfully:', updatedUser);
+    console.log('=== ADMIN DASHBOARD - USER UPDATE ===');
+    console.log('User created/updated successfully:', updatedUser);
     
     // Update stats immediately for better UX
     setStats(prevStats => ({
@@ -129,12 +130,24 @@ const AdminDashboard = () => {
       femaleUsers: updatedUser.gender === 'female' ? prevStats.femaleUsers + 1 : prevStats.femaleUsers
     }));
     
-    // Also refresh dashboard data from backend
-    fetchDashboardData();
+    console.log('📊 Updated dashboard stats');
     
-    // Force refresh of user table if it exists
+    // Immediately refresh user table
+    console.log('🔄 Dispatching immediate user table refresh event');
     const refreshEvent = new CustomEvent('refreshUserTable');
     window.dispatchEvent(refreshEvent);
+    
+    // Also refresh dashboard data from backend with delay
+    setTimeout(() => {
+      console.log('🔄 Triggering delayed dashboard data refresh');
+      fetchDashboardData();
+      
+      // Second refresh event for good measure
+      const secondRefreshEvent = new CustomEvent('refreshUserTable');
+      window.dispatchEvent(secondRefreshEvent);
+    }, 1000); // 1 second delay to allow backend processing
+    
+    console.log('=== ADMIN DASHBOARD - USER UPDATE COMPLETE ===');
   };
 
   const handleEmployeeUpdate = (updatedEmployee) => {
@@ -606,7 +619,7 @@ const AdminDashboard = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <Card sx={{ 
-                height: 400,
+                height: 450,
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 '&:hover': { boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }
               }}>
@@ -614,16 +627,16 @@ const AdminDashboard = () => {
                   <Typography variant="h6" component="h2" sx={{ mb: 2, color: '#005A54', fontWeight: 'bold' }}>
                     User Distribution
                   </Typography>
-                  <ResponsiveContainer width="100%" height={270}>
-                    <PieChart>
+                  <Box sx={{ width: '100%', height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <PieChart width={350} height={300}>
                       <Pie
                         data={[
-                          { name: 'Male', value: stats.maleUsers, color: '#005A54' },
-                          { name: 'Female', value: stats.femaleUsers, color: '#EF6869' },
-                          { name: 'Other', value: Math.max(0, stats.totalUsers - stats.maleUsers - stats.femaleUsers), color: '#9C27B0' }
-                        ]}
-                        cx="50%"
-                        cy="50%"
+                          { name: 'Male', value: stats.maleUsers },
+                          { name: 'Female', value: stats.femaleUsers },
+                          { name: 'Other', value: Math.max(0, stats.totalUsers - stats.maleUsers - stats.femaleUsers) }
+                        ].filter(item => item.value > 0)}
+                        cx={175}
+                        cy={150}
                         labelLine={false}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         outerRadius={80}
@@ -634,24 +647,26 @@ const AdminDashboard = () => {
                           { name: 'Male', value: stats.maleUsers, color: '#005A54' },
                           { name: 'Female', value: stats.femaleUsers, color: '#EF6869' },
                           { name: 'Other', value: Math.max(0, stats.totalUsers - stats.maleUsers - stats.femaleUsers), color: '#9C27B0' }
-                        ].map((entry, index) => (
+                        ].filter(item => item.value > 0).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                       <RechartsTooltip />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </Box>
                   
                   {/* Legend */}
-                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Box sx={{ width: 12, height: 12, bgcolor: '#005A54', borderRadius: '50%' }} />
-                      <Typography variant="caption">Male ({stats.maleUsers})</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Box sx={{ width: 12, height: 12, bgcolor: '#EF6869', borderRadius: '50%' }} />
-                      <Typography variant="caption">Female ({stats.femaleUsers})</Typography>
-                    </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 1.5, mt: 2 }}>
+                    {[
+                      { name: 'Male', value: stats.maleUsers, color: '#005A54' },
+                      { name: 'Female', value: stats.femaleUsers, color: '#EF6869' },
+                      { name: 'Other', value: Math.max(0, stats.totalUsers - stats.maleUsers - stats.femaleUsers), color: '#9C27B0' }
+                    ].filter(item => item.value > 0).map((user, index) => (
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ width: 12, height: 12, bgcolor: user.color, borderRadius: '50%' }} />
+                        <Typography variant="caption">{user.name} ({user.value})</Typography>
+                      </Box>
+                    ))}
                   </Box>
                 </CardContent>
               </Card>

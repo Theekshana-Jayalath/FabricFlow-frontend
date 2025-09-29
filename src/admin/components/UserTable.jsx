@@ -65,22 +65,22 @@ const UserTable = () => {
     // Also refresh when component becomes visible (when navigating to this page)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        console.log('Page became visible, refreshing users');
+        console.log('🔄 Page became visible, refreshing users');
         fetchUsers();
       }
     };
     
     // Listen for localStorage changes from other tabs/components
     const handleStorageChange = (e) => {
-      if (e.key === 'localUsers') {
-        console.log('Local users changed, refreshing table');
+      if (e.key === 'localUsers' || e.key === 'userDataUpdated') {
+        console.log('🔄 Storage change detected, refreshing table');
         fetchUsers();
       }
     };
     
     // Listen for custom refresh events from AdminDashboard
     const handleCustomRefresh = () => {
-      console.log('Custom refresh event received, refreshing users');
+      console.log('🔄 Custom refresh event received, refreshing users');
       fetchUsers();
     };
     
@@ -98,20 +98,26 @@ const UserTable = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Starting fetchUsers...');
       
       // First, try to fetch from backend
       let backendUsers = [];
       try {
+        console.log('📡 Attempting to fetch from backend...');
         const response = await axios.get('http://localhost:5000/users');
         backendUsers = response.data?.users || response.data || [];
-        console.log('Fetched users from backend:', backendUsers.length);
+        console.log('✅ Fetched users from backend:', backendUsers.length);
+        console.log('Backend users:', backendUsers.map(u => ({ id: u._id, name: u.name, email: u.gmail || u.email })));
       } catch (backendError) {
-        console.log('Backend not available, using local data only');
+        console.log('❌ Backend not available, using local data only:', backendError.message);
       }
       
       // Get users from localStorage (created when backend is down)
       const localUsers = JSON.parse(localStorage.getItem('localUsers') || '[]');
-      console.log('Local users found:', localUsers.length);
+      console.log('📁 Local users found:', localUsers.length);
+      if (localUsers.length > 0) {
+        console.log('Local users:', localUsers.map(u => ({ id: u._id, name: u.name, email: u.gmail || u.email })));
+      }
       
       // Combine backend and local users, avoiding duplicates
       const allUsers = [...backendUsers];
@@ -119,33 +125,41 @@ const UserTable = () => {
       // Add local users that don't exist in backend data
       localUsers.forEach(localUser => {
         const existsInBackend = backendUsers.some(backendUser => 
-          backendUser.email === localUser.email || backendUser.gmail === localUser.gmail || backendUser._id === localUser._id
+          backendUser.email === localUser.email || 
+          backendUser.gmail === localUser.gmail || 
+          backendUser._id === localUser._id ||
+          backendUser.name === localUser.name
         );
         if (!existsInBackend) {
+          console.log('➕ Adding local user to table:', localUser.name);
           allUsers.push(localUser);
+        } else {
+          console.log('⏭️ Skipping duplicate local user:', localUser.name);
         }
       });
       
-      console.log('Total users (backend + local):', allUsers.length);
+      console.log('📊 Total users (backend + local):', allUsers.length);
       setUsers(allUsers);
       setFilteredUsers(allUsers);
       
-      // If we successfully got backend data, clear localStorage to avoid duplicates
-      if (backendUsers.length > 0) {
-        localStorage.removeItem('localUsers');
-        console.log('Cleared local users cache - backend is working');
+      // If we successfully got backend data and have local data, merge them properly
+      if (backendUsers.length > 0 && localUsers.length > 0) {
+        console.log('🔄 Backend is working, but keeping local users that might not be synced yet');
+        // Don't clear localStorage immediately - let the backend sync process handle it
       }
       
     } catch (error) {
-      console.error('Error in fetchUsers:', error);
+      console.error('❌ Error in fetchUsers:', error);
       showAlert('Failed to fetch users from server', 'error');
       
       // Fallback to localStorage only
       const localUsers = JSON.parse(localStorage.getItem('localUsers') || '[]');
+      console.log('📁 Using localStorage fallback:', localUsers.length, 'users');
       setUsers(localUsers);
       setFilteredUsers(localUsers);
     } finally {
       setLoading(false);
+      console.log('✅ fetchUsers completed');
     }
   };
 

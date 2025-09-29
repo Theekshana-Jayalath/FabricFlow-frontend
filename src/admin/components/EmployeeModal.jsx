@@ -12,29 +12,38 @@ import {
   IconButton,
   Divider,
   MenuItem,
-  InputAdornment
+  InputAdornment,
+  Avatar,
+  Paper,
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WorkIcon from '@mui/icons-material/Work';
+import BusinessIcon from '@mui/icons-material/Business';
 import axios from 'axios';
 
 const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
-  const [formData, setFormData] = useState({
+  const getInitialFormData = () => ({
     empName: '',
     empID: '',
     jobPosition: '',
     email: '',
     phone: '',
     address: '',
-    hireDate: '',
     status: 'Active',
-    password: '', // Add password field
+    password: '', // Always start empty
     age: '',
     dob: '',
     gender: ''
   });
+
+  const [formData, setFormData] = useState(getInitialFormData());
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false); // Add password visibility state
@@ -70,31 +79,34 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
         email: employee.email || '',
         phone: employee.phone || '',
         address: employee.address || '',
-        hireDate: employee.hireDate ? employee.hireDate.split('T')[0] : '',
         status: employee.status || 'Active',
+        password: '', // Always clear password for existing employees
         age: employee.age || '',
         dob: employee.dob ? employee.dob.split('T')[0] : '',
         gender: employee.gender || ''
       });
     } else if (mode === 'create') {
-      // Reset form for create mode
-      setFormData({
-        empName: '',
-        empID: '',
-        jobPosition: '',
-        email: '',
-        phone: '',
-        address: '',
-        hireDate: '',
-        status: 'Active',
-        password: '', // Add password field for new employees
-        age: '',
-        dob: '',
-        gender: ''
-      });
+      // Reset form for create mode - use fresh data
+      setFormData(getInitialFormData());
       setErrors({});
     }
   }, [employee, mode]);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      // When modal opens, reset everything if it's create mode
+      if (mode === 'create') {
+        setFormData(getInitialFormData());
+      }
+      setShowPassword(false);
+      setErrors({});
+    } else {
+      // Clear form data when modal closes
+      setFormData(getInitialFormData());
+      setErrors({});
+    }
+  }, [open, mode]);
 
   // Comprehensive validation helper functions
   const validateEmployeeId = (empID) => {
@@ -390,7 +402,6 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
           status: formData.status.toLowerCase(),
           address: formData.address,
           emailAddress: formData.email,
-          hireDate: formData.hireDate,
           createdAt: new Date().toISOString()
         };
         
@@ -501,8 +512,7 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
           jobPosition: formData.jobPosition,
           status: formData.status.toLowerCase(),
           address: formData.address,
-          emailAddress: formData.email,
-          hireDate: formData.hireDate
+          emailAddress: formData.email
         };
         
         try {
@@ -543,231 +553,488 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
   const isViewMode = mode === 'view';
   const isCreateMode = mode === 'create';
   
+  // Debug logging
+  console.log('🔍 EMPLOYEE MODAL DEBUG:', { mode, employee: !!employee, isCreateMode, isViewMode });
+  
   const title = isViewMode ? 'Employee Details' : (isCreateMode ? 'Add New Employee' : 'Edit Employee');
   const buttonText = isCreateMode ? 'Create Employee' : 'Save Changes';
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0, 90, 84, 0.12)',
+        }
+      }}
+    >
+      <DialogTitle
+        sx={{
+          background: 'linear-gradient(135deg, #005A54 0%, #007B6F 100%)',
+          color: 'white',
+          position: 'relative',
+          p: 3
+        }}
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box display="flex" alignItems="center" gap={1}>
-            {isViewMode ? <VisibilityIcon color="primary" /> : <EditIcon color="primary" />}
-            <Typography variant="h6">{title}</Typography>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar 
+              sx={{ 
+                bgcolor: 'rgba(255, 255, 255, 0.2)', 
+                backdropFilter: 'blur(10px)',
+                border: '2px solid rgba(255, 255, 255, 0.3)'
+              }}
+            >
+              {isViewMode ? (
+                <VisibilityIcon sx={{ color: 'white' }} />
+              ) : isCreateMode ? (
+                <PersonAddIcon sx={{ color: 'white' }} />
+              ) : (
+                <EditIcon sx={{ color: 'white' }} />
+              )}
+            </Avatar>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                {title}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                {isViewMode 
+                  ? 'View employee information and details'
+                  : isCreateMode 
+                    ? 'Create a new employee with validation and age verification'
+                    : 'Update employee information'
+                }
+              </Typography>
+            </Box>
           </Box>
-          <IconButton onClick={onClose}>
+          <IconButton 
+            onClick={onClose}
+            sx={{
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
+              color: 'white'
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
       </DialogTitle>
       
-      <Divider />
-      
-      <DialogContent>
-        <Box sx={{ pt: 2 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Employee Name"
-                value={formData.empName}
-                onChange={(e) => handleInputChange('empName', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.empName}
-                helperText={errors.empName}
-                required
-              />
-            </Grid>
+      <DialogContent sx={{ p: 0 }}>
+        <Box sx={{ p: 4, bgcolor: '#FAFAFA' }}>
+          {/* Personal Information Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              mb: 3, 
+              borderRadius: 2,
+              border: '1px solid rgba(0, 90, 84, 0.12)',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: '#005A54', mr: 2, width: 32, height: 32 }}>
+                <PersonAddIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#005A54', fontWeight: 'bold' }}>
+                  Personal Information
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Enter the employee's basic details and contact information
+                </Typography>
+              </Box>
+            </Box>
             
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Employee ID"
-                value={formData.empID}
-                onChange={(e) => handleInputChange('empID', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.empID}
-                helperText={errors.empID}
-                required
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.email}
-                helperText={errors.email}
-                required
-              />
-            </Grid>
-            
-            {/* Password field - only show for create mode */}
-            {isCreateMode && (
+            <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  label="Employee Name"
+                  value={formData.empName}
+                  onChange={(e) => handleInputChange('empName', e.target.value)}
                   disabled={isViewMode}
-                  error={!!errors.password}
-                  helperText={errors.password}
+                  error={!!errors.empName}
+                  helperText={errors.empName}
                   required
-                  placeholder="Enter password (min. 6 characters)"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={handleTogglePasswordVisibility}
-                          edge="end"
-                          size="small"
-                        >
-                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
                   }}
                 />
               </Grid>
-            )}
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                select
-                label="Job Position"
-                value={formData.jobPosition}
-                onChange={(e) => handleInputChange('jobPosition', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.jobPosition}
-                helperText={errors.jobPosition}
-                // Temporarily make it not required
-                // required
-              >
-                {jobPositions.map((position) => (
-                  <MenuItem key={position} value={position}>
-                    {position}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                disabled={isViewMode}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Hire Date"
-                type="date"
-                value={formData.hireDate}
-                onChange={(e) => handleInputChange('hireDate', e.target.value)}
-                disabled={isViewMode}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                select
-                label="Status"
-                value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value)}
-                disabled={isViewMode}
-              >
-                {statusOptions.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Date of Birth"
-                type="date"
-                value={formData.dob}
-                onChange={(e) => handleInputChange('dob', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.dob}
-                helperText={errors.dob}
-                required
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Age"
-                type="number"
-                value={formData.age}
-                onChange={(e) => handleInputChange('age', e.target.value)}
-                disabled={isViewMode || formData.dob} // Disable if DOB is filled (auto-calculated)
-                error={!!errors.age}
-                helperText={formData.dob ? "Auto-calculated from date of birth" : errors.age}
-                required
-                inputProps={{ min: 18, max: 65 }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                select
-                label="Gender"
-                value={formData.gender}
-                onChange={(e) => handleInputChange('gender', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.gender}
-                helperText={errors.gender}
-                required
-              >
-                {genderOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Address"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                disabled={isViewMode}
-                multiline
-                rows={3}
-              />
-            </Grid>
-            
-            {employee && (
-              <>
-                <Grid item xs={12}>
-                  <Divider sx={{ my: 1 }} />
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    System Information
-                  </Typography>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Employee ID"
+                  value={formData.empID}
+                  onChange={(e) => handleInputChange('empID', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.empID}
+                  helperText={errors.empID}
+                  required
+                  variant="outlined"
+                  placeholder="e.g., EMP001"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  required
+                  variant="outlined"
+                  placeholder="employee@company.com"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.phone}
+                  helperText={errors.phone || "Format: 0771234567 or +94771234567"}
+                  variant="outlined"
+                  placeholder="Enter phone number"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Gender"
+                  select
+                  value={formData.gender}
+                  onChange={(e) => handleInputChange('gender', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.gender}
+                  helperText={errors.gender}
+                  required
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                >
+                  {genderOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              {/* Password field - only show for create mode */}
+              {mode === 'create' && !employee && (
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    disabled={isViewMode}
+                    error={!!errors.password}
+                    helperText={errors.password}
+                    required
+                    variant="outlined"
+                    placeholder="Enter password (min. 6 characters)"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': { borderColor: '#005A54' },
+                        '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                    }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={handleTogglePasswordVisibility}
+                            edge="end"
+                            size="small"
+                          >
+                            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
                 </Grid>
-                
+              )}
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.address}
+                  helperText={errors.address}
+                  required
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  placeholder="Enter complete address with city and postal code"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Age & Date of Birth Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              mb: 3, 
+              borderRadius: 2,
+              border: '1px solid rgba(0, 90, 84, 0.12)',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: '#EF6869', mr: 2, width: 32, height: 32 }}>
+                <CheckCircleIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#005A54', fontWeight: 'bold' }}>
+                  Age & Date of Birth
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Date of birth will automatically calculate the age
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Date of Birth"
+                  type="date"
+                  value={formData.dob}
+                  onChange={(e) => handleInputChange('dob', e.target.value)}
+                  disabled={isViewMode}
+                  InputLabelProps={{ shrink: true }}
+                  error={!!errors.dob}
+                  helperText={errors.dob}
+                  required
+                  variant="outlined"
+                  inputProps={{
+                    max: new Date().toISOString().split('T')[0],
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Age"
+                  type="number"
+                  value={formData.age}
+                  onChange={(e) => handleInputChange('age', e.target.value)}
+                  disabled={isViewMode || formData.dob} // Disable if DOB is filled (auto-calculated)
+                  error={!!errors.age}
+                  helperText={formData.dob ? "Auto-calculated from date of birth" : (errors.age || "Age will be calculated from date of birth")}
+                  required
+                  variant="outlined"
+                  inputProps={{
+                    min: 18,
+                    max: 65,
+                    step: 1
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' },
+                      ...(formData.dob && {
+                        bgcolor: '#f5f5f5'
+                      })
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                  InputProps={{
+                    endAdornment: formData.dob && (
+                      <Chip 
+                        label="Auto-calculated" 
+                        size="small" 
+                        color="success" 
+                        variant="outlined"
+                        sx={{ mr: 1 }}
+                      />
+                    )
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Job Information Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              borderRadius: 2,
+              border: '1px solid rgba(0, 90, 84, 0.12)',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: '#ff9800', mr: 2, width: 32, height: 32 }}>
+                <WorkIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#005A54', fontWeight: 'bold' }}>
+                  Job Information
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Configure employee role and status
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Job Position"
+                  value={formData.jobPosition}
+                  onChange={(e) => handleInputChange('jobPosition', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.jobPosition}
+                  helperText={errors.jobPosition || "Select employee position"}
+                  required
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                >
+                  {jobPositions.map((position) => (
+                    <MenuItem key={position} value={position}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <BusinessIcon sx={{ fontSize: 16, color: '#005A54' }} />
+                        <Typography variant="body2">{position}</Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Status"
+                  value={formData.status}
+                  onChange={(e) => handleInputChange('status', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.status}
+                  helperText={errors.status || "Employee work status"}
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                >
+                  {statusOptions.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip 
+                          label={status} 
+                          size="small" 
+                          color={status === 'Active' ? 'success' : status === 'Inactive' ? 'warning' : 'default'}
+                          variant="outlined"
+                        />
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
+          </Paper>
+            
+          {employee && (
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 3, 
+                mt: 3,
+                borderRadius: 2,
+                border: '1px solid rgba(0, 0, 0, 0.12)',
+                bgcolor: '#f8f9fa'
+              }}
+            >
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom sx={{ mb: 2 }}>
+                System Information
+              </Typography>
+              <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -775,6 +1042,7 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
                     value={employee._id || ''}
                     disabled
                     size="small"
+                    variant="outlined"
                   />
                 </Grid>
                 
@@ -785,22 +1053,33 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
                     value={employee.createdAt ? new Date(employee.createdAt).toLocaleDateString() : 'N/A'}
                     disabled
                     size="small"
+                    variant="outlined"
                   />
                 </Grid>
-              </>
-            )}
-          </Grid>
+              </Grid>
+            </Paper>
+          )}
           
           {errors.submit && (
-            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-              {errors.submit}
-            </Typography>
+            <Box 
+              sx={{ 
+                mt: 3, 
+                p: 2, 
+                bgcolor: '#ffebee', 
+                borderRadius: 2, 
+                border: '1px solid #f44336' 
+              }}
+            >
+              <Typography color="error" variant="body2">
+                {errors.submit}
+              </Typography>
+            </Box>
           )}
         </Box>
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} color="inherit">
+      <DialogActions sx={{ px: 3, pb: 3 }}>
+        <Button onClick={onClose} color="inherit" variant="outlined">
           {isViewMode ? 'Close' : 'Cancel'}
         </Button>
         {!isViewMode && (
@@ -808,9 +1087,11 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
             onClick={handleSave} 
             variant="contained" 
             disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} /> : null}
             sx={{ 
-              bgcolor: '#EF6869', 
-              '&:hover': { bgcolor: '#e55456' } 
+              bgcolor: '#005A54', 
+              '&:hover': { bgcolor: '#004A47' },
+              minWidth: 120
             }}
           >
             {loading ? (isCreateMode ? 'Creating...' : 'Saving...') : buttonText}
