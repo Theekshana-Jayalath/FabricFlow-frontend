@@ -1,10 +1,12 @@
-// App.jsx
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./auth/ProtectedRouteComponent";
 import Nav from "./Components/Nav/Nav";
 import Footer from "./Components/Footer/Footer";
+
+// Public pages
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
@@ -19,6 +21,13 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import RouteTest from "./pages/RouteTest";
 import DriverDashboard from "./pages/DriverDashboard";
+
+// Order management components
+import OrderDetails from "./components/orderDetails";
+import AddNewOrder from "./components/addNewOrder";
+import UpdateOrder from "./components/updateOrder";
+import ProductCatalog from "./components/ProductCatalog";
+import ProductDetails from "./components/ProductDetails";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
@@ -36,7 +45,11 @@ import AddDriver from "./admin/pages/AddDriver";
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <CartProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </CartProvider>
     </AuthProvider>
   );
 }
@@ -49,7 +62,7 @@ function AppContent() {
   const shouldHideFooter = hideFooterOnPaths.some(path => location.pathname.startsWith(path));
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100">
       {!shouldHideNav && <Nav />}
       <Routes>
         {/* Public routes */}
@@ -59,6 +72,15 @@ function AppContent() {
         <Route path="/services" element={<Services />} />
         <Route path="/features" element={<Home />} />
         <Route path="/contact" element={<Contact />} />
+        
+        {/* Product routes (from Order branch) */}
+        <Route path="/products" element={<ProductCatalog />} />
+        <Route path="/product/:productId" element={<ProductDetails />} />
+        
+        {/* Order management routes (from Order branch) */}
+        <Route path="/order-details" element={<OrderDetails />} />
+        <Route path="/add-new-order" element={<AddNewOrder />} />
+        <Route path="/update-order/:orderId" element={<UpdateOrder />} />
         
         {/* Authentication routes */}
         <Route path="/login" element={<Login />} />
