@@ -46,6 +46,12 @@ import Materials from "./Components/Inventory/Materials";
 import Purchases from "./Components/Inventory/Purchase";
 import Supplier from "./Components/Inventory/Supplier";
 import InventoryReports from "./Components/Inventory/Reports";
+import FinanceDashboard from "./Components/Finance/Dashbord";
+import Expenses from "./Components/Finance/Expenses";
+import Invoices from "./Components/Finance/Invoices";
+import Payroll from "./Components/Finance/Payroll";
+import FinanceReport from "./Components/Finance/Report";
+
 
 function App() {
   return (
@@ -228,7 +234,6 @@ function AppContent() {
             element={<AllOrders />} 
           />
 
-
           <Route 
             path="inventory/dashboard" 
             element={<InventoryDashboard/>} 
@@ -252,6 +257,27 @@ function AppContent() {
           <Route 
             path="inventory/reports" 
             element={<InventoryReports/>} 
+
+          <Route 
+            path="finance/dashboard" 
+            element={<FinanceDashboard />} 
+          />
+          <Route 
+            path="finance/expenses" 
+            element={<Expenses/>} 
+          />
+          <Route 
+            path="finance/invoices" 
+            element={<Invoices/>} 
+          />
+          <Route 
+            path="finance/payrolls" 
+            element={<Payroll/>} 
+          />
+
+          <Route 
+            path="finance/reports" 
+            element={<FinanceReport/>}
           />
 
 
