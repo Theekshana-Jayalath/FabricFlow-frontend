@@ -2,34 +2,26 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const DeliveryManagement = () => {
-  const [shippedOrders, setShippedOrders] = useState([]);
+  const [deliveredOrders, setDeliveredOrders] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchShippedOrders();
+    fetchDeliveredOrders();
     fetchDrivers();
   }, []);
 
-  const fetchShippedOrders = async () => {
+  const fetchDeliveredOrders = async () => {
     try {
       setLoading(true);
-      // Try the unassigned endpoint first
-      try {
-        const response = await axios.get('/api/distributions/unassigned');
-        console.log('Unassigned orders response:', response.data);
-        setShippedOrders(response.data.data?.orders || []);
-      } catch (unassignedError) {
-        console.log('Unassigned endpoint failed, trying original orders endpoint:', unassignedError);
-        // Fallback to original orders endpoint
-        const response = await axios.get('/api/orders?status=SHIPPED');
-        console.log('SHIPPED orders response:', response.data);
-        setShippedOrders(response.data.orders || []);
-      }
+      // Fetch orders with DELIVERED status
+      const response = await axios.get('/api/orders?status=DELIVERED');
+      console.log('DELIVERED orders response:', response.data);
+      setDeliveredOrders(response.data.orders || []);
     } catch (err) {
-      setError('Failed to fetch SHIPPED orders');
-      console.error('Error fetching SHIPPED orders:', err);
+      setError('Failed to fetch DELIVERED orders');
+      console.error('Error fetching DELIVERED orders:', err);
     } finally {
       setLoading(false);
     }
@@ -37,7 +29,7 @@ const DeliveryManagement = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get('/api/drivers/allDrivers');
+      const response = await axios.get('/api/drivers');
       setDrivers(response.data.data || []);
     } catch (err) {
       console.error('Error fetching drivers:', err);
@@ -87,11 +79,11 @@ const DeliveryManagement = () => {
             Delivery Management
           </h1>
           <p className="text-gray-600">
-            View SHIPPED orders ready for delivery
+            View DELIVERED orders for review
           </p>
         </div>
         <button
-          onClick={fetchShippedOrders}
+          onClick={fetchDeliveredOrders}
           className="flex items-center px-4 py-2 bg-[#005A54] text-white rounded-lg hover:bg-[#004d47] transition-colors"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,10 +102,10 @@ const DeliveryManagement = () => {
             </svg>
             <div>
               <h2 className="text-4xl font-bold">
-                {shippedOrders.length}
+                {deliveredOrders.length}
               </h2>
               <p className="text-sm">
-                Orders Ready for Delivery
+                Delivered Orders
               </p>
             </div>
           </div>
@@ -140,7 +132,7 @@ const DeliveryManagement = () => {
             </svg>
             <div>
               <h2 className="text-4xl font-bold">
-                {shippedOrders.reduce((sum, order) => sum + order.totalAmount, 0).toLocaleString()}
+                {deliveredOrders.reduce((sum, order) => sum + order.totalAmount, 0).toLocaleString()}
               </h2>
               <p className="text-sm">
                 Total Value (USD)
@@ -155,10 +147,10 @@ const DeliveryManagement = () => {
             </svg>
             <div>
               <h2 className="text-4xl font-bold">
-                {shippedOrders.length > 0 ? Math.round((shippedOrders.length / shippedOrders.length) * 100) : 0}%
+                {deliveredOrders.length > 0 ? Math.round((deliveredOrders.length / deliveredOrders.length) * 100) : 0}%
               </h2>
               <p className="text-sm">
-                Ready for Assignment
+                Completion Rate
               </p>
             </div>
           </div>
@@ -189,19 +181,19 @@ const DeliveryManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {shippedOrders.length === 0 ? (
+              {deliveredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <h3 className="text-xl font-semibold text-gray-500 mb-2">
-                      No SHIPPED orders available for delivery assignment
+                      No DELIVERED orders available
                     </h3>
                     <p className="text-gray-400">
-                      Orders marked as "SHIPPED" by the order manager will appear here
+                      Orders marked as "DELIVERED" will appear here
                     </p>
                   </td>
                 </tr>
               ) : (
-                shippedOrders.map((order) => (
+                deliveredOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
