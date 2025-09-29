@@ -15,8 +15,8 @@ import {
   FaSignOutAlt,
   FaUserCircle,
 } from 'react-icons/fa';
-import '../../styles/Finance/Dashbord.css';
-import '../../styles/Finance/Expenses.css';
+import '../Finance/Dashbord.css';
+import './Expenses.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -26,7 +26,7 @@ const PayrollURL = "http://localhost:5000/api/payrolls";
 const ProfileURL = "http://localhost:5000/api/profile";
 const OrdersURL = "http://localhost:5000/api/orders";
 
-const Dashboard = ({ onTotalExpensesChange }) => {
+const FinanceDashboard = ({ onTotalExpensesChange }) => {
   const navigate = useNavigate();
 
   const [expenses, setExpenses] = useState([]);
@@ -168,23 +168,7 @@ const Dashboard = ({ onTotalExpensesChange }) => {
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-[#005a54] text-white shadow-lg flex flex-col">
-        <div className="text-2xl font-bold p-5">Finance Admin</div>
-        <nav className="flex-1">
-          <ul className="space-y-1 px-2">
-            <li><button className="nav-link w-full flex items-center gap-2" onClick={() => navigate('/')}>🏠 Home</button></li>
-            <li><button className="nav-link w-full flex items-center gap-2" onClick={() => navigate('/expenses')}>💰 Expenses</button></li>
-            <li><button className="nav-link w-full flex items-center gap-2" onClick={() => navigate('/invoices')}>🧾 Invoices</button></li>
-            <li><button className="nav-link w-full flex items-center gap-2" onClick={() => navigate('/payroll')}>👥 Payroll</button></li>
-            <li><button className="nav-link w-full flex items-center gap-2" onClick={() => navigate('/Report')}>📊 Report</button></li>
-          </ul>
-        </nav>
-
-        <button className="btn-danger mt-auto flex items-center gap-2 mx-3 mb-3 justify-center" onClick={handleLogout}>
-          <FaSignOutAlt /> Logout
-        </button>
-      </aside>
+      
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto">
@@ -259,4 +243,4 @@ const Dashboard = ({ onTotalExpensesChange }) => {
   );
 };
 
-export default Dashboard;
+export default FinanceDashboard;
