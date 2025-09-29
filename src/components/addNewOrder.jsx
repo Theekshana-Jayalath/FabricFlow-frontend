@@ -19,6 +19,19 @@ const COLORS = [
   "Red", "Blue", "Green", "Yellow", "White", "Purple", "Pink", "Orange", "Brown", "Gray", "Navy", "Maroon", "Turquoise", "Beige"
 ];
 
+const MATERIALS = [
+  "Premium Cotton (200 GSM)",
+  "Cotton Blend (180 GSM)", 
+  "Cotton Stretch (220 GSM)",
+  "Cotton Stretch (260 GSM)",
+  "Linen Blend (150 GSM)",
+  "Polyester Blend (170 GSM)",
+  "Silk Blend (120 GSM)",
+  "Denim (300 GSM)",
+  "Organic Cotton (190 GSM)",
+  "Bamboo Blend (160 GSM)"
+];
+
 // Function to generate auto order ID
 const generateOrderId = () => {
   const prefix = "ORD";
@@ -313,6 +326,7 @@ function AddNewOrder() {
         productId: "",
         size: "",
         color: "",
+        material: "",
         quantity: 1,
         price: 0
       }
@@ -397,6 +411,7 @@ function AddNewOrder() {
         item.productId || 'N/A',
         item.size || 'N/A',
         item.color || 'N/A',
+        item.material || 'N/A',
         item.quantity || 0,
         `${calculateItemFabricMeters(item).toFixed(1)}m`,
         `Rs ${(item.price || 0).toLocaleString()}`,
@@ -406,7 +421,7 @@ function AddNewOrder() {
       // Add table with autoTable plugin
       autoTable(doc, {
         startY: 175,
-        head: [['#', 'Product ID', 'Size', 'Color', 'Qty', 'Fabric', 'Unit Price', 'Total Price']],
+        head: [['#', 'Product ID', 'Size', 'Color', 'Material', 'Qty', 'Fabric', 'Unit Price', 'Total Price']],
         body: tableData,
         theme: 'striped',
         headStyles: {
@@ -425,14 +440,15 @@ function AddNewOrder() {
           fillColor: [248, 249, 250]
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 12 },
-          1: { halign: 'center', cellWidth: 25 },
-          2: { halign: 'center', cellWidth: 18 },
-          3: { halign: 'center', cellWidth: 22 },
-          4: { halign: 'center', cellWidth: 15 },
-          5: { halign: 'center', cellWidth: 20, fillColor: [220, 255, 220] },
-          6: { halign: 'right', cellWidth: 25 },
-          7: { halign: 'right', cellWidth: 30 }
+          0: { halign: 'center', cellWidth: 10 },
+          1: { halign: 'center', cellWidth: 20 },
+          2: { halign: 'center', cellWidth: 15 },
+          3: { halign: 'center', cellWidth: 18 },
+          4: { halign: 'center', cellWidth: 25 },
+          5: { halign: 'center', cellWidth: 12 },
+          6: { halign: 'center', cellWidth: 18, fillColor: [220, 255, 220] },
+          7: { halign: 'right', cellWidth: 22 },
+          8: { halign: 'right', cellWidth: 25 }
         },
         margin: { left: 20, right: 20 }
       });
@@ -687,6 +703,7 @@ function AddNewOrder() {
           productId: "",
           size: "",
           color: "",
+          material: "",
           quantity: 1,
           price: 0
         }
@@ -756,6 +773,10 @@ function AddNewOrder() {
         alert(`Color is required for item ${i + 1}`);
         return false;
       }
+      if (!item.material) {
+        alert(`Material is required for item ${i + 1}`);
+        return false;
+      }
       if (!item.quantity || item.quantity <= 0) {
         alert(`Valid quantity is required for item ${i + 1}`);
         return false;
@@ -806,6 +827,7 @@ function AddNewOrder() {
           productId: item.productId,
           size: item.size,
           color: item.color,
+          material: item.material,
           quantity: Number(item.quantity),
           price: Number(item.price)
         })),
@@ -1069,7 +1091,7 @@ function AddNewOrder() {
                     </button>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Product ID *</label>
                     <input
@@ -1109,6 +1131,22 @@ function AddNewOrder() {
                       {COLORS.map((color) => (
                         <option key={color} value={color}>
                           {color}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Material *</label>
+                    <select
+                      value={item.material || ""}
+                      onChange={(e) => handleItemChange(index, 'material', e.target.value)}
+                      required
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+                    >
+                      <option value="">Select Material</option>
+                      {MATERIALS.map((material) => (
+                        <option key={material} value={material}>
+                          {material}
                         </option>
                       ))}
                     </select>

@@ -5,6 +5,19 @@ import { FaSave, FaArrowLeft } from "react-icons/fa";
 
 const URL = "http://localhost:5000/api/orders";
 
+const MATERIALS = [
+  "Premium Cotton (200 GSM)",
+  "Cotton Blend (180 GSM)", 
+  "Cotton Stretch (220 GSM)",
+  "Cotton Stretch (260 GSM)",
+  "Linen Blend (150 GSM)",
+  "Polyester Blend (170 GSM)",
+  "Silk Blend (120 GSM)",
+  "Denim (300 GSM)",
+  "Organic Cotton (190 GSM)",
+  "Bamboo Blend (160 GSM)"
+];
+
 // Function to get fabric consumption by category
 const getFabricConsumptionByCategory = (categoryName) => {
   const consumption = {
@@ -439,6 +452,7 @@ function UpdateOrder() {
                       <th className="p-3 border text-left">Product ID</th>
                       <th className="p-3 border text-left">Size</th>
                       <th className="p-3 border text-left">Color</th>
+                      <th className="p-3 border text-left">Material</th>
                       <th className="p-3 border text-center">Quantity</th>
                       <th className="p-3 border text-center">Fabric (Meters)</th>
                       <th className="p-3 border text-right">Unit Price</th>
@@ -454,6 +468,11 @@ function UpdateOrder() {
                           <span className="inline-block w-4 h-4 rounded-full mr-2" 
                                 style={{backgroundColor: item.color.toLowerCase()}}></span>
                           {item.color}
+                        </td>
+                        <td className="p-3 border">
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {item.material || 'Not specified'}
+                          </span>
                         </td>
                         <td className="p-3 border text-center">{item.quantity}</td>
                         <td className="p-3 border text-center font-medium text-green-600">
