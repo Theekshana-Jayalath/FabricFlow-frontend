@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import RouteTest from "./pages/RouteTest";
+import DriverDashboard from "./pages/DriverDashboard";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
@@ -130,6 +131,16 @@ function AppContent() {
           element={
             <ProtectedRoute requireAuth={true} requiredPermission="employee">
               <EmployeeDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Driver Dashboard */}
+        <Route 
+          path="/driver/dashboard" 
+          element={
+            <ProtectedRoute requireAuth={true} requiredPermission="employee">
+              <DriverDashboard />
             </ProtectedRoute>
           } 
         />

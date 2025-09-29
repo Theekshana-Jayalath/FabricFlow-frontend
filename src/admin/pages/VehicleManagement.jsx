@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Plus, Search, Filter, Edit, Trash2, Eye, User, UserX } from 'lucide-react';
+import { Truck, Plus, Search, Filter, Edit, Trash2, Eye, User, UserX, UserPlus } from 'lucide-react';
 import AddVehicleModal from './AddVehicleModal';
 import EditVehicleModal from './EditVehicleModal';
+import AssignDriverModal from './AssignDriverModal';
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -9,7 +10,9 @@ const VehicleManagement = () => {
   const [error, setError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAssignDriverModal, setShowAssignDriverModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [drivers, setDrivers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -55,8 +58,33 @@ const VehicleManagement = () => {
     }
   };
 
+  // Fetch drivers from backend
+  const fetchDrivers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/drivers', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch drivers');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setDrivers(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching drivers:', err);
+    }
+  };
+
   useEffect(() => {
     fetchVehicles(1, searchTerm, statusFilter, typeFilter);
+    fetchDrivers();
   }, [searchTerm, statusFilter, typeFilter]);
 
   const handleSearch = (e) => {
@@ -116,6 +144,60 @@ const VehicleManagement = () => {
       }
     } catch (err) {
       alert('Error deleting vehicle: ' + err.message);
+    }
+  };
+
+  const handleAssignDriver = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowAssignDriverModal(true);
+  };
+
+  const handleDriverAssignment = async (driverId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/vehicles/${selectedVehicle._id}/assign-driver`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ driverId }),
+      });
+
+      if (response.ok) {
+        setShowAssignDriverModal(false);
+        setSelectedVehicle(null);
+        fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+        alert('Driver assigned successfully!');
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to assign driver');
+      }
+    } catch (err) {
+      alert('Error assigning driver: ' + err.message);
+    }
+  };
+
+  const handleUnassignDriver = async (vehicleId) => {
+    if (!window.confirm('Are you sure you want to unassign the driver from this vehicle?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}/unassign-driver`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+        alert('Driver unassigned successfully!');
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to unassign driver');
+      }
+    } catch (err) {
+      alert('Error unassigning driver: ' + err.message);
     }
   };
 
@@ -282,10 +364,10 @@ const VehicleManagement = () => {
                             <User className="w-4 h-4 text-green-600 mr-2" />
                             <div>
                               <div className="text-sm font-medium text-gray-900">
-                                {vehicle.assignedDriverId.name}
+                                {vehicle.assignedDriverId.empName}
                               </div>
                               <div className="text-sm text-gray-500">
-                                {vehicle.assignedDriverId.phone}
+                                {vehicle.assignedDriverId.empPhone}
                               </div>
                             </div>
                           </div>
@@ -307,6 +389,23 @@ const VehicleManagement = () => {
                           >
                             <Edit className="w-4 h-4" />
                           </button>
+                          {vehicle.assignedDriverId ? (
+                            <button 
+                              onClick={() => handleUnassignDriver(vehicle._id)}
+                              className="text-orange-600 hover:text-orange-900 p-1 rounded hover:bg-orange-50"
+                              title="Unassign Driver"
+                            >
+                              <UserX className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleAssignDriver(vehicle)}
+                              className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                              title="Assign Driver"
+                            >
+                              <UserPlus className="w-4 h-4" />
+                            </button>
+                          )}
                           <button 
                             onClick={() => handleDeleteVehicle(vehicle._id)}
                             className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
@@ -366,6 +465,19 @@ const VehicleManagement = () => {
           vehicle={selectedVehicle}
           onClose={handleCloseEditModal}
           onVehicleUpdated={handleVehicleUpdated}
+        />
+      )}
+
+      {/* Assign Driver Modal */}
+      {showAssignDriverModal && selectedVehicle && (
+        <AssignDriverModal
+          vehicle={selectedVehicle}
+          drivers={drivers}
+          onClose={() => {
+            setShowAssignDriverModal(false);
+            setSelectedVehicle(null);
+          }}
+          onDriverAssigned={handleDriverAssignment}
         />
       )}
     </div>

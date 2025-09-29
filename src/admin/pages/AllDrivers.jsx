@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import axios from 'axios';
 
 const AllDrivers = () => {
@@ -181,7 +181,7 @@ const AllDrivers = () => {
       driver.createdAt ? new Date(driver.createdAt).toLocaleDateString() : '-'
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 32,
       head: [[
         '#', 'Employee ID', 'Name', 'Phone', 'Email', 'Status', 'Address', 'Created Date'

@@ -285,7 +285,7 @@ function EmployeeDashboard() {
         {/* Quick Actions */}
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <button className="p-4 border-2 border-[#005A54] text-[#005A54] rounded-lg hover:bg-[#005A54] hover:text-white transition-colors">
               <div className="text-2xl mb-2">📋</div>
               <div className="text-sm font-medium">View All Tasks</div>
@@ -301,6 +301,13 @@ function EmployeeDashboard() {
             <button className="p-4 border-2 border-[#EF6869] text-[#EF6869] rounded-lg hover:bg-[#EF6869] hover:text-white transition-colors">
               <div className="text-2xl mb-2">⏰</div>
               <div className="text-sm font-medium">Clock In/Out</div>
+            </button>
+            <button 
+              onClick={() => navigate('/driver/dashboard')}
+              className="p-4 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"
+            >
+              <div className="text-2xl mb-2">🚚</div>
+              <div className="text-sm font-medium">Driver Dashboard</div>
             </button>
           </div>
         </div>
