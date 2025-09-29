@@ -11,11 +11,16 @@ import {
   Box,
   IconButton,
   Divider,
-  MenuItem
+  MenuItem,
+  Avatar,
+  Paper,
+  Chip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axios from 'axios';
 
 const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
@@ -101,41 +106,82 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
   };
 
   const validateAddress = (address) => {
-    if (!address) return ''; // Address is optional
-    
     const trimmed = address.trim();
-    if (trimmed.length < 5) {
-      return 'Address must be at least 5 characters';
+    if (!trimmed) {
+      return 'Address is required';
     }
-    if (!/^[a-zA-Z0-9\s,.-]+$/.test(trimmed)) {
-      return 'Address can only contain letters, numbers, spaces, commas, periods, and hyphens';
+    
+    if (trimmed.length < 10) {
+      return 'Address must be at least 10 characters';
     }
+    
+    if (trimmed.length > 200) {
+      return 'Address must not exceed 200 characters';
+    }
+    
+    // Allow letters, numbers, spaces, common punctuation for addresses
+    if (!/^[a-zA-Z0-9\s,.\-/\\#()]+$/.test(trimmed)) {
+      return 'Address contains invalid characters';
+    }
+    
     return '';
   };
 
-  const validateAge = (age) => {
-    if (!age) return ''; // Age is optional
+  const validateAge = (age, dob = null) => {
+    if (!age) {
+      return 'Age is required';
+    }
     
     const ageNum = parseInt(age);
     if (isNaN(ageNum) || ageNum < 16 || ageNum > 100) {
-      return 'Age must be between 16 and 100';
+      return 'Age must be between 16 and 100 years';
     }
+
+    // Enhanced cross-validation with DOB if provided
+    if (dob) {
+      const birthDate = new Date(dob);
+      const today = new Date();
+      
+      // Calculate age more accurately
+      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
+      }
+      
+      // Allow exact match or difference of 1 year (for birthday timing)
+      if (Math.abs(calculatedAge - ageNum) > 1) {
+        return `Age should be ${calculatedAge} based on date of birth`;
+      }
+    }
+    
     return '';
   };
 
   const validateDateOfBirth = (dob) => {
-    if (!dob) return ''; // DOB is optional
+    if (!dob) {
+      return 'Date of birth is required';
+    }
     
     const birthDate = new Date(dob);
     const today = new Date();
+    
     if (birthDate >= today) {
       return 'Date of birth cannot be in the future';
     }
     
-    // Check if age and dob are consistent
-    const currentYear = today.getFullYear();
-    const birthYear = birthDate.getFullYear();
-    const calculatedAge = currentYear - birthYear;
+    // Calculate age from DOB and validate range
+    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      calculatedAge--;
+    }
+    
+    if (calculatedAge < 16 || calculatedAge > 100) {
+      return 'Age calculated from date of birth must be between 16 and 100 years';
+    }
     
     return '';
   };
@@ -231,7 +277,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
         fieldError = validateAddress(processedValue);
         break;
       case 'age':
-        fieldError = validateAge(processedValue);
+        fieldError = validateAge(processedValue, updatedFormData.dob);
         break;
       case 'gender':
         fieldError = validateGender(processedValue);
@@ -243,7 +289,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
         fieldError = validateDateOfBirth(processedValue);
         // Auto-calculated age should be validated against the new DOB
         if (!fieldError && updatedFormData.age) {
-          const ageError = validateAge(updatedFormData.age);
+          const ageError = validateAge(updatedFormData.age, processedValue);
           if (ageError && ageError.includes('date of birth')) {
             newErrors.age = ageError;
           } else if (newErrors.age && newErrors.age.includes('date of birth')) {
@@ -277,7 +323,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
     const addressError = validateAddress(formData.address);
     if (addressError) newErrors.address = addressError;
 
-    const ageError = validateAge(formData.age);
+    const ageError = validateAge(formData.age, formData.dob);
     if (ageError) newErrors.age = ageError;
 
     const genderError = validateGender(formData.gender);
@@ -333,7 +379,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
         try {
           const userData = {
             role: formData.role || 'user',
-            password: 'defaultPassword123',
+            password: 'defaultPassword123', // Default password for admin-created users
             name: formData.name,
             gmail: formData.email,
             age: parseInt(formData.age) || null,
@@ -343,40 +389,67 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
             dob: formData.dob || null
           };
           
-          console.log('Sending user registration data:', userData);
+          console.log('📡 Attempting auth/register endpoint:', userData);
           const backendResponse = await axios.post('http://localhost:5000/auth/register', userData);
-          console.log('User registered successfully:', backendResponse.data);
+          console.log('✅ User registered via auth/register:', backendResponse.data);
           
-          // Use backend response data
-          response = backendResponse;
+          // Use backend response data and ensure it has proper structure
+          const createdUser = backendResponse.data.user || backendResponse.data;
+          response = { 
+            data: { 
+              user: {
+                ...createdUser,
+                email: createdUser.gmail || createdUser.email, // Ensure email field exists
+                gmail: createdUser.gmail || createdUser.email  // Ensure gmail field exists
+              } 
+            } 
+          };
+          
+          console.log('✅ Final user data from auth/register:', response.data.user);
           
         } catch (authError) {
-          console.log('Auth register failed, trying direct user creation:', authError);
+          console.log('❌ Auth register failed, trying direct user creation:', authError.message);
           
           try {
             const fallbackData = {
               name: formData.name,
               gmail: formData.email,
+              email: formData.email, // Include both email fields
               age: parseInt(formData.age) || null,
               address: formData.address || '',
               phone: formData.phone || '',
               gender: formData.gender || 'other',
-              dob: formData.dob || null
+              dob: formData.dob || null,
+              role: formData.role || 'user'
             };
             
+            console.log('📡 Attempting direct users endpoint:', fallbackData);
             const fallbackResponse = await axios.post('http://localhost:5000/users', fallbackData);
-            console.log('User created via fallback endpoint:', fallbackResponse.data);
-            response = fallbackResponse;
+            console.log('✅ User created via direct users endpoint:', fallbackResponse.data);
+            
+            // Use fallback response
+            const createdUser = fallbackResponse.data.user || fallbackResponse.data;
+            response = { 
+              data: { 
+                user: {
+                  ...createdUser,
+                  email: createdUser.gmail || createdUser.email,
+                  gmail: createdUser.gmail || createdUser.email
+                } 
+              } 
+            };
+            
+            console.log('✅ Final user data from direct endpoint:', response.data.user);
             
           } catch (fallbackError) {
-            console.log('Both backend endpoints failed, using localStorage:', fallbackError);
+            console.log('❌ Both backend endpoints failed, using localStorage:', fallbackError.message);
             
             // Final fallback to localStorage
             const existingUsers = JSON.parse(localStorage.getItem('localUsers') || '[]');
             existingUsers.push(newUser);
             localStorage.setItem('localUsers', JSON.stringify(existingUsers));
-            console.log('Saved user to localStorage:', newUser);
-            console.log('Total local users now:', existingUsers.length);
+            console.log('💾 Saved user to localStorage:', newUser);
+            console.log('📊 Total local users now:', existingUsers.length);
             
             // Trigger a storage event for other components to listen to
             window.dispatchEvent(new StorageEvent('storage', {
@@ -410,12 +483,31 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
       }
       
       if (onUserUpdate) {
-        console.log('Calling onUserUpdate with:', response.data);
+        console.log('=== USER UPDATE CALLBACK ===');
+        console.log('Response data:', response.data);
+        console.log('User data being passed to callback:', response.data.user || response.data);
         onUserUpdate(response.data.user || response.data);
+        console.log('onUserUpdate callback completed');
+      } else {
+        console.log('⚠️ Warning: onUserUpdate callback is not provided');
       }
       
       console.log('Closing modal');
       onClose();
+      
+      // Add a small delay to ensure the update callback is processed
+      setTimeout(() => {
+        console.log('🔄 Dispatching additional refresh events');
+        // Force refresh of user table
+        const refreshEvent = new CustomEvent('refreshUserTable');
+        window.dispatchEvent(refreshEvent);
+        
+        // Also dispatch storage event to trigger other listeners
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'userDataUpdated',
+          newValue: Date.now().toString()
+        }));
+      }, 100);
       
       // Clear any previous errors
       setErrors({});
@@ -435,173 +527,390 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
   const buttonText = isCreateMode ? 'Create User' : 'Save Changes';
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: '0 8px 32px rgba(0, 90, 84, 0.12)',
+        }
+      }}
+    >
+      <DialogTitle
+        sx={{
+          background: 'linear-gradient(135deg, #005A54 0%, #007B6F 100%)',
+          color: 'white',
+          position: 'relative',
+          p: 3
+        }}
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box display="flex" alignItems="center" gap={1}>
-            {isViewMode ? <VisibilityIcon color="primary" /> : <EditIcon color="primary" />}
-            <Typography variant="h6">{title}</Typography>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Avatar 
+              sx={{ 
+                bgcolor: 'rgba(255, 255, 255, 0.2)', 
+                backdropFilter: 'blur(10px)',
+                border: '2px solid rgba(255, 255, 255, 0.3)'
+              }}
+            >
+              {isViewMode ? (
+                <VisibilityIcon sx={{ color: 'white' }} />
+              ) : isCreateMode ? (
+                <PersonAddIcon sx={{ color: 'white' }} />
+              ) : (
+                <EditIcon sx={{ color: 'white' }} />
+              )}
+            </Avatar>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                {title}
+              </Typography>
+              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                {isViewMode 
+                  ? 'View user information and details'
+                  : isCreateMode 
+                    ? 'Create a new user account with validation'
+                    : 'Update user information'
+                }
+              </Typography>
+            </Box>
           </Box>
-          <IconButton onClick={onClose}>
+          <IconButton 
+            onClick={onClose}
+            sx={{
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.2)' },
+              color: 'white'
+            }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>
       </DialogTitle>
       
-      <Divider />
-      
-      <DialogContent>
-        <Box sx={{ pt: 2 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.name}
-                helperText={errors.name}
-                required
-              />
-            </Grid>
+      <DialogContent sx={{ p: 0 }}>
+        <Box sx={{ p: 4, bgcolor: '#FAFAFA' }}>
+          {/* Personal Information Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              mb: 3, 
+              borderRadius: 2,
+              border: '1px solid rgba(0, 90, 84, 0.12)',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: '#005A54', mr: 2, width: 32, height: 32 }}>
+                <PersonAddIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#005A54', fontWeight: 'bold' }}>
+                  Personal Information
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Enter the user's basic details and contact information
+                </Typography>
+              </Box>
+            </Box>
             
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.email}
-                helperText={errors.email}
-                required
-              />
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Full Name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.name}
+                  helperText={errors.name}
+                  required
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  required
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.phone}
+                  helperText={errors.phone || "Format: 0771234567 or +94771234567"}
+                  required
+                  variant="outlined"
+                  placeholder="Enter phone number"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Gender"
+                  select
+                  value={formData.gender}
+                  onChange={(e) => handleInputChange('gender', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.gender}
+                  helperText={errors.gender}
+                  required
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Select Gender</em>
+                  </MenuItem>
+                  <MenuItem value="male">Male</MenuItem>
+                  <MenuItem value="female">Female</MenuItem>
+                  <MenuItem value="other">Other</MenuItem>
+                </TextField>
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.address}
+                  helperText={errors.address}
+                  required
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  placeholder="Enter complete address with city and postal code"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
             </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Gender"
-                select
-                value={formData.gender}
-                onChange={(e) => handleInputChange('gender', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.gender}
-                helperText={errors.gender}
-                required
-                SelectProps={{
-                  native: false,
-                }}
-              >
-                <MenuItem value="">
-                  <em>Select Gender</em>
-                </MenuItem>
-                <MenuItem value="male">Male</MenuItem>
-                <MenuItem value="female">Female</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
-              </TextField>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Age"
-                type="number"
-                value={formData.age}
-                onChange={(e) => handleInputChange('age', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.age}
-                helperText={errors.age}
-                required
-                inputProps={{
-                  min: 16,
-                  max: 100,
-                  step: 1
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.phone}
-                helperText={errors.phone}
-                required
-                inputProps={{
-                  pattern: '[0-9+\\-\\s]*',
-                  title: 'Please enter a valid phone number'
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Address"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.address}
-                helperText={errors.address}
-                required
-                multiline
-                rows={2}
-              />
-            </Grid>
+          </Paper>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Date of Birth"
-                type="date"
-                value={formData.dob}
-                onChange={(e) => handleInputChange('dob', e.target.value)}
-                disabled={isViewMode}
-                InputLabelProps={{ shrink: true }}
-                error={!!errors.dob}
-                helperText={errors.dob}
-                required
-                inputProps={{
-                  max: new Date().toISOString().split('T')[0],
-                }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Role"
-                select
-                value={formData.role}
-                onChange={(e) => handleInputChange('role', e.target.value)}
-                disabled={isViewMode}
-                error={!!errors.role}
-                helperText={errors.role}
-                required
-                SelectProps={{
-                  native: false,
-                }}
-              >
-                <MenuItem value="user">User</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-              </TextField>
-            </Grid>
+          {/* Age & Date of Birth Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              mb: 3, 
+              borderRadius: 2,
+              border: '1px solid rgba(0, 90, 84, 0.12)',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: '#EF6869', mr: 2, width: 32, height: 32 }}>
+                <CheckCircleIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#005A54', fontWeight: 'bold' }}>
+                  Age & Date of Birth
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Date of birth will automatically calculate the age
+                </Typography>
+              </Box>
+            </Box>
             
-            {user && (
-              <>
-                <Grid item xs={12}>
-                  <Divider sx={{ my: 1 }} />
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    System Information
-                  </Typography>
-                </Grid>
-                
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Date of Birth"
+                  type="date"
+                  value={formData.dob}
+                  onChange={(e) => handleInputChange('dob', e.target.value)}
+                  disabled={isViewMode}
+                  InputLabelProps={{ shrink: true }}
+                  error={!!errors.dob}
+                  helperText={errors.dob}
+                  required
+                  variant="outlined"
+                  inputProps={{
+                    max: new Date().toISOString().split('T')[0],
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Age"
+                  type="number"
+                  value={formData.age}
+                  onChange={(e) => handleInputChange('age', e.target.value)}
+                  disabled={isViewMode || formData.dob} // Disable if DOB is filled (auto-calculated)
+                  error={!!errors.age}
+                  helperText={formData.dob ? "Auto-calculated from date of birth" : (errors.age || "Age will be calculated from date of birth")}
+                  required
+                  variant="outlined"
+                  inputProps={{
+                    min: 16,
+                    max: 100,
+                    step: 1
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' },
+                      ...(formData.dob && {
+                        bgcolor: '#f5f5f5'
+                      })
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                  InputProps={{
+                    endAdornment: formData.dob && (
+                      <Chip 
+                        label="Auto-calculated" 
+                        size="small" 
+                        color="success" 
+                        variant="outlined"
+                        sx={{ mr: 1 }}
+                      />
+                    )
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* System Information Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 3, 
+              borderRadius: 2,
+              border: '1px solid rgba(0, 90, 84, 0.12)',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: '#ff9800', mr: 2, width: 32, height: 32 }}>
+                <EditIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ color: '#005A54', fontWeight: 'bold' }}>
+                  Account Settings
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Configure user role and permissions
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Role"
+                  select
+                  value={formData.role}
+                  onChange={(e) => handleInputChange('role', e.target.value)}
+                  disabled={isViewMode}
+                  error={!!errors.role}
+                  helperText={errors.role || "Select user access level"}
+                  required
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': { borderColor: '#005A54' },
+                      '&.Mui-focused fieldset': { borderColor: '#005A54' }
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': { color: '#005A54' }
+                  }}
+                >
+                  <MenuItem value="user">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label="User" size="small" color="default" />
+                      <Typography variant="body2">Basic access to place orders</Typography>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="admin">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip label="Admin" size="small" color="primary" />
+                      <Typography variant="body2">Full system access</Typography>
+                    </Box>
+                  </MenuItem>
+                </TextField>
+              </Grid>
+            </Grid>
+          </Paper>
+            
+          {user && (
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 3, 
+                mt: 3,
+                borderRadius: 2,
+                border: '1px solid rgba(0, 0, 0, 0.12)',
+                bgcolor: '#f8f9fa'
+              }}
+            >
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom sx={{ mb: 2 }}>
+                System Information
+              </Typography>
+              <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -609,6 +918,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
                     value={user._id || ''}
                     disabled
                     size="small"
+                    variant="outlined"
                   />
                 </Grid>
                 
@@ -619,22 +929,56 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
                     value={user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                     disabled
                     size="small"
+                    variant="outlined"
                   />
                 </Grid>
-              </>
-            )}
-          </Grid>
+              </Grid>
+            </Paper>
+          )}
           
           {errors.submit && (
-            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
-              {errors.submit}
-            </Typography>
+            <Box 
+              sx={{ 
+                mt: 3, 
+                p: 2, 
+                bgcolor: '#ffebee', 
+                borderRadius: 2, 
+                border: '1px solid #f44336' 
+              }}
+            >
+              <Typography color="error" variant="body2">
+                {errors.submit}
+              </Typography>
+            </Box>
           )}
         </Box>
       </DialogContent>
       
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} color="inherit">
+      <DialogActions 
+        sx={{ 
+          px: 4, 
+          py: 3, 
+          bgcolor: '#f8f9fa',
+          borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+          gap: 2,
+          justifyContent: 'flex-end'
+        }}
+      >
+        <Button 
+          onClick={onClose} 
+          color="inherit"
+          size="large"
+          sx={{
+            px: 3,
+            py: 1.5,
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 500,
+            '&:hover': { 
+              bgcolor: 'rgba(0, 0, 0, 0.04)' 
+            }
+          }}
+        >
           {isViewMode ? 'Close' : 'Cancel'}
         </Button>
         {!isViewMode && (
@@ -642,12 +986,50 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
             onClick={handleSave} 
             variant="contained" 
             disabled={loading}
+            size="large"
+            startIcon={isCreateMode ? <PersonAddIcon /> : <EditIcon />}
             sx={{ 
-              bgcolor: '#005A54', 
-              '&:hover': { bgcolor: '#004A45' } 
+              px: 4,
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              background: 'linear-gradient(135deg, #005A54 0%, #007B6F 100%)',
+              boxShadow: '0 4px 14px 0 rgba(0, 90, 84, 0.39)',
+              '&:hover': { 
+                background: 'linear-gradient(135deg, #004A45 0%, #006B5F 100%)',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 6px 20px 0 rgba(0, 90, 84, 0.49)',
+              },
+              '&:disabled': {
+                background: 'rgba(0, 0, 0, 0.26)',
+                transform: 'none',
+                boxShadow: 'none'
+              },
+              transition: 'all 0.2s ease-in-out'
             }}
           >
-            {loading ? (isCreateMode ? 'Creating...' : 'Saving...') : buttonText}
+            {loading ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  sx={{
+                    width: 16,
+                    height: 16,
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '50%',
+                    borderTopColor: 'white',
+                    animation: 'spin 1s linear infinite',
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' }
+                    }
+                  }}
+                />
+                {isCreateMode ? 'Creating User...' : 'Saving Changes...'}
+              </Box>
+            ) : (
+              buttonText
+            )}
           </Button>
         )}
       </DialogActions>
