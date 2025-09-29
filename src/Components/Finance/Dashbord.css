@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for bar chart placeholders */
+.bg-gray-200 {
+  transition: height 0.3s ease;
+}
+
+/* Hover effect for buttons */
+button:hover {
+  opacity: 0.9;
+}
+
+/* Ensure table rows have consistent spacing */
+table tr {
+  vertical-align: middle;
+}

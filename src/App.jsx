@@ -32,6 +32,12 @@ import VehicleManagement from "./admin/pages/VehicleManagement";
 import DeliveryManagement from "./admin/pages/DeliveryManagement";
 import AllOrders from "./admin/pages/AllOrders";
 import AddDriver from "./admin/pages/AddDriver";
+import Expenses from "./Components/Finance/Expenses";
+import Report from "./Components/Finance/Report";
+import Payroll from "./Components/Finance/Payroll";
+import OrderDetails from "./Components/Finance/Invoices";
+import financeDashboard from './Components/Finance/Dashbord'
+import FinanceDashboard from "./Components/Finance/Dashbord";
 
 function App() {
   return (
@@ -197,6 +203,34 @@ function AppContent() {
           <Route 
             path="orders/all-delivery-orders" 
             element={<AllOrders />} 
+          />
+
+
+
+          {/* finance routes*/}
+          <Route 
+            path="finance/expenses" 
+            element={<Expenses/>} 
+          />
+
+          <Route 
+            path="finance/reports" 
+            element={<Report/>} 
+          />
+
+          <Route 
+            path="finance/payroll" 
+            element={<Payroll/>} 
+          />
+
+          <Route 
+            path="finance/invoice" 
+            element={<OrderDetails/>} 
+          />
+
+          <Route 
+            path="finance/dashboard" 
+            element={<FinanceDashboard/>} 
           />
         </Route>
 

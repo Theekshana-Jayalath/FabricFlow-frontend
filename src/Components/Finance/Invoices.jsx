@@ -95,15 +95,7 @@ function OrderDetails() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-[#005a54] text-white shadow-lg flex flex-col">
-        <aside className="w-64 bg-[#005a54] text-white shadow-lg flex flex-col"></aside>
-        <h2 className="text-2xl font-bold mb-4">Menu</h2>
-        <button
-          className="text-left px-4 py-2 rounded hover:bg-blue-100 font-semibold"
-          onClick={() => setFilter("ALL")}
-        >
-          Invoice
-        </button>
+      <div>
         <button
           className="text-left px-4 py-2 rounded hover:bg-blue-100 font-semibold"
           onClick={() => navigate("/invoiceSummury")}
