@@ -41,6 +41,11 @@ import VehicleManagement from "./admin/pages/VehicleManagement";
 import DeliveryManagement from "./admin/pages/DeliveryManagement";
 import AllOrders from "./admin/pages/AllOrders";
 import AddDriver from "./admin/pages/AddDriver";
+import FinanceDashboard from "./Components/Finance/Dashbord";
+import Expenses from "./Components/Finance/Expenses";
+import Invoices from "./Components/Finance/Invoices";
+import Payroll from "./Components/Finance/Payroll";
+import FinanceReport from "./Components/Finance/Report";
 
 function App() {
   return (
@@ -222,6 +227,30 @@ function AppContent() {
             path="orders/all-delivery-orders" 
             element={<AllOrders />} 
           />
+
+          <Route 
+            path="finance/dashboard" 
+            element={<FinanceDashboard />} 
+          />
+          <Route 
+            path="finance/expenses" 
+            element={<Expenses/>} 
+          />
+          <Route 
+            path="finance/invoices" 
+            element={<Invoices/>} 
+          />
+          <Route 
+            path="finance/payrolls" 
+            element={<Payroll/>} 
+          />
+
+          <Route 
+            path="finance/reports" 
+            element={<FinanceReport/>} 
+          />
+
+
         </Route>
 
         {/* 404 Not Found - This should be the last route */}
