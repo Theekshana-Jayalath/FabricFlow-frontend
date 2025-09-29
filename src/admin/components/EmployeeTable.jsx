@@ -45,6 +45,7 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import EmployeeViewEditModal from './EmployeeViewEditModal';
+import EmployeeModal from './EmployeeModal';
 
 const EmployeeTable = () => {
   const [employees, setEmployees] = useState([]);
@@ -59,6 +60,10 @@ const EmployeeTable = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
+  
+  // Add Employee Modal states
+  const [addEmployeeModalOpen, setAddEmployeeModalOpen] = useState(false);
+  const [addEmployeeMode, setAddEmployeeMode] = useState('create');
 
   // Fetch employees from backend
   useEffect(() => {
@@ -543,6 +548,19 @@ const EmployeeTable = () => {
             </Typography>
             <Button
               variant="contained"
+              startIcon={<Work />}
+              onClick={() => setAddEmployeeModalOpen(true)}
+              sx={{ 
+                mr: 1,
+                bgcolor: '#EF6869', 
+                '&:hover': { bgcolor: '#d55859' },
+                color: 'white'
+              }}
+            >
+              Add New Employee
+            </Button>
+            <Button
+              variant="contained"
               onClick={() => {
                 console.log('Manual refresh clicked');
                 fetchEmployees();
@@ -775,6 +793,18 @@ const EmployeeTable = () => {
         employee={selectedEmployee}
         mode={modalMode}
         onEmployeeUpdate={handleEmployeeUpdate}
+      />
+
+      {/* Employee Modal for Adding New Employees */}
+      <EmployeeModal
+        open={addEmployeeModalOpen}
+        onClose={() => setAddEmployeeModalOpen(false)}
+        employee={null}
+        mode={addEmployeeMode}
+        onEmployeeUpdate={() => {
+          fetchEmployees(); // Refresh the table after adding a new employee
+          setAddEmployeeModalOpen(false);
+        }}
       />
     </Box>
   );

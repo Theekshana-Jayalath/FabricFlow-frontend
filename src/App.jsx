@@ -259,6 +259,7 @@ function AppContent() {
           <Route 
             path="inventory/reports" 
             element={<InventoryReports/>} 
+          />
 
           <Route 
             path="finance/dashboard" 

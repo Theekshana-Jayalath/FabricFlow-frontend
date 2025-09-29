@@ -362,14 +362,33 @@ const AdminDashboard = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Box sx={{ p: 3, backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      <Box sx={{ 
+        p: 3, 
+        backgroundColor: '#f8fafc', 
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        maxWidth: '1400px',
+        margin: '0 auto',
+        width: '100%'
+      }}>
         {/* Enhanced Welcome Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
+          style={{ width: '100%' }}
         >
-          <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ 
+            mb: 4, 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '1200px',
+            margin: '0 auto'
+          }}>
             <Box>
               <Typography variant="h3" component="h1" sx={{ 
                 color: '#005A54', 
@@ -440,7 +459,13 @@ const AdminDashboard = () => {
         </motion.div>
 
         {/* Enhanced Statistics Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={3} sx={{ 
+          mb: 4, 
+          width: '100%', 
+          maxWidth: '1200px', 
+          margin: '0 auto 32px auto',
+          justifyContent: 'center'
+        }}>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Total Users"
@@ -489,7 +514,13 @@ const AdminDashboard = () => {
         </Grid>
 
         {/* Interactive Charts Section */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={3} sx={{ 
+          mb: 4, 
+          width: '100%', 
+          maxWidth: '1200px', 
+          margin: '0 auto 32px auto',
+          justifyContent: 'center'
+        }}>
           {/* Revenue Chart */}
           <Grid item xs={12} lg={8}>
             <motion.div
@@ -598,7 +629,12 @@ const AdminDashboard = () => {
         </Grid>
 
         {/* Enhanced Recent Activity */}
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ 
+          width: '100%', 
+          maxWidth: '1200px', 
+          margin: '0 auto',
+          justifyContent: 'center'
+        }}>
           <Grid item xs={12} md={6}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -748,7 +784,13 @@ const AdminDashboard = () => {
         </Grid>
 
       {/* Quick Actions */}
-      <Grid container spacing={3} sx={{ mt: 2 }}>
+      <Grid container spacing={3} sx={{ 
+        mt: 2, 
+        width: '100%', 
+        maxWidth: '1200px', 
+        margin: '16px auto 0 auto',
+        justifyContent: 'center'
+      }}>
         <Grid item xs={12}>
           <Card>
             <CardContent>
@@ -761,6 +803,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="contained"
                     startIcon={<People />}
+                    onClick={() => navigate('/admin/users')}
                     sx={{
                       bgcolor: '#005A54',
                       '&:hover': { bgcolor: '#004A44' },
@@ -775,6 +818,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="contained"
                     startIcon={<Work />}
+                    onClick={() => navigate('/admin/employees')}
                     sx={{
                       bgcolor: '#EF6869',
                       '&:hover': { bgcolor: '#d55859' },
@@ -789,6 +833,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="outlined"
                     startIcon={<ShoppingBag />}
+                    onClick={() => navigate('/admin/orders/all')}
                     sx={{
                       borderColor: '#005A54',
                       color: '#005A54',
@@ -807,6 +852,7 @@ const AdminDashboard = () => {
                     fullWidth
                     variant="outlined"
                     startIcon={<TrendingUp />}
+                    onClick={() => navigate('/admin/charts')}
                     sx={{
                       borderColor: '#EF6869',
                       color: '#EF6869',

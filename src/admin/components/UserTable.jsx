@@ -43,6 +43,7 @@ import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import UserViewEditModal from './UserViewEditModal';
+import UserModal from './UserModal';
 
 const UserTable = () => {
   const [users, setUsers] = useState([]);
@@ -57,6 +58,10 @@ const UserTable = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [modalMode, setModalMode] = useState('view'); // 'view' or 'edit'
+  
+  // Add User Modal states
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [addUserMode, setAddUserMode] = useState('create');
 
   // Fetch users from backend
   useEffect(() => {
@@ -548,6 +553,19 @@ const UserTable = () => {
             </Typography>
             <Button
               variant="contained"
+              startIcon={<Person />}
+              onClick={() => setAddUserModalOpen(true)}
+              sx={{ 
+                mr: 1,
+                bgcolor: '#EF6869', 
+                '&:hover': { bgcolor: '#d55859' },
+                color: 'white'
+              }}
+            >
+              Add New User
+            </Button>
+            <Button
+              variant="contained"
               onClick={() => {
                 console.log('Manual refresh clicked');
                 fetchUsers();
@@ -759,6 +777,18 @@ const UserTable = () => {
         user={selectedUser}
         mode={modalMode}
         onUserUpdate={handleUserUpdate}
+      />
+
+      {/* User Modal for Adding New Users */}
+      <UserModal
+        open={addUserModalOpen}
+        onClose={() => setAddUserModalOpen(false)}
+        user={null}
+        mode={addUserMode}
+        onUserUpdate={() => {
+          fetchUsers(); // Refresh the table after adding a new user
+          setAddUserModalOpen(false);
+        }}
       />
     </Box>
   );
