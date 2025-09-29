@@ -16,6 +16,7 @@ function Nav() {
   // Navigation items for different user types
   const publicNavItems = [
     { path: '/', label: 'Home', icon: '🏠' },
+    { path: '/products', label: 'Products', icon: '👔' },
     { path: '/about', label: 'About Us', icon: '📖' },
     { path: '/services', label: 'Services', icon: '⚙️' },
     { path: '/features', label: 'Features', icon: '✨' },

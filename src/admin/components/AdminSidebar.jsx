@@ -61,10 +61,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: ordersOpen,
       onClick: () => setOrdersOpen(!ordersOpen),
       subItems: [
-        { text: 'All Orders', path: '/admin/orders/all', icon: <ShoppingCart /> },
-        { text: 'Pending Orders', path: '/admin/orders/pending', icon: <ShoppingCart /> },
-        { text: 'Processing', path: '/admin/orders/processing', icon: <ShoppingCart /> },
-        { text: 'Completed Orders', path: '/admin/orders/completed', icon: <ShoppingCart /> }
+        { text: 'All Orders', path: '/admin/orders/all', icon: <ShoppingCart /> }
       ]
     },
     {
