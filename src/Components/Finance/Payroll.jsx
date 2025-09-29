@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import autoTable from "jspdf-autotable";
+
 
 const API_URL = "http://localhost:5000/api/payrolls";
 
@@ -22,16 +14,16 @@ const Payroll = () => {
     empName: "",
     payrollId: "",
     date: "",
-    basicSalary: 0,
+    basicSalary: "",
     workingDays: 30,
-    absentDays: 0,
-    overtimeHours: 0,
-    otRate: 0,
-    allowances: [{ title: "", amount: 0 }],
-    deductions: [{ title: "", amount: 0 }],
+    absentDays: "",
+    overtimeHours: "",
+    otRate: "",
+    allowances: [{ title: "", amount: "" }],
+    deductions: [{ title: "", amount: "" }],
   });
   const [error, setError] = useState("");
-  const [editingId, setEditingId] = useState(null); // track which payroll is being edited
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     fetchPayrolls();
@@ -40,13 +32,13 @@ const Payroll = () => {
   const fetchPayrolls = async () => {
     try {
       const res = await axios.get(API_URL);
-      setPayrolls(res.data.payrolls);
+      setPayrolls(res.data.payrolls || []);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // REAL-TIME CALCULATIONS
+  /** --- Calculations --- */
   const calculateTotals = (data) => {
     const basic = Number(data.basicSalary) || 0;
     const working = Number(data.workingDays) || 1;
@@ -74,34 +66,61 @@ const Payroll = () => {
 
   const totals = calculateTotals(formData);
 
+  /** --- Monthly Payroll Chart Data --- */
+  const getMonthlyPayrollData = () => {
+    const monthlyTotals = {};
+    payrolls.forEach((p) => {
+      const date = new Date(p.date);
+      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      if (!monthlyTotals[monthYear]) {
+        monthlyTotals[monthYear] = { name: monthYear, netSalary: 0 };
+      }
+      monthlyTotals[monthYear].netSalary += Number(p.netsalary || 0);
+    });
+    return Object.values(monthlyTotals).sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const chartData = getMonthlyPayrollData();
+
+  /** --- Save or Update payroll --- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.empName || !formData.basicSalary) {
       setError("Employee name and basic salary required");
       return;
     }
+    const calc = calculateTotals(formData);
+
+    const allowances = (formData.allowances || []).filter(
+      (a) => a.title && a.amount
+    );
+    const deductions = (formData.deductions || []).filter(
+      (d) => d.title && d.amount
+    );
 
     const payload = {
       ...formData,
-      empId: formData.empId || `EMP ${Date.now()}`,
-      payrollId: formData.payrollId || `PAY ${Date.now()}`,
+      empId: formData.empId || `EMP${Date.now()}`,
+      payrollId: formData.payrollId || `PAY${Date.now()}`,
       date: formData.date || new Date().toISOString().split("T")[0],
-      otAmount: totals.otAmount,
-      noPay: totals.noPay,
-      epfEmployee: totals.epfEmployee,
-      netsalary: totals.netSalary,
+      otAmount: calc.otAmount,
+      noPay: calc.noPay,
+      epfEmployee: calc.epfEmployee,
+      totalAllowances: allowances.reduce((s, a) => s + Number(a.amount), 0),
+      totalDeductions: deductions.reduce((s, d) => s + Number(d.amount), 0),
+      netsalary: calc.netSalary,
+      allowances,
+      deductions,
     };
 
     try {
       if (editingId) {
-        // Update existing payroll
         const res = await axios.put(`${API_URL}/${editingId}`, payload);
         setPayrolls(
           payrolls.map((p) => (p._id === editingId ? res.data.payroll : p))
         );
         setEditingId(null);
       } else {
-        // Add new payroll
         const res = await axios.post(API_URL, payload);
         setPayrolls([...payrolls, res.data.payroll]);
       }
@@ -118,20 +137,26 @@ const Payroll = () => {
       empName: "",
       payrollId: "",
       date: "",
-      basicSalary: 0,
+      basicSalary: "",
       workingDays: 30,
-      absentDays: 0,
-      overtimeHours: 0,
-      otRate: 0,
-      allowances: [{ title: "", amount: 0 }],
-      deductions: [{ title: "", amount: 0 }],
+      absentDays: "",
+      overtimeHours: "",
+      otRate: "",
+      allowances: [{ title: "", amount: "" }],
+      deductions: [{ title: "", amount: "" }],
     });
     setError("");
     setShowForm(false);
     setEditingId(null);
   };
 
+  /** --- Delete with confirmation --- */
   const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this payroll record?"
+    );
+    if (!confirmDelete) return;
+
     try {
       await axios.delete(`${API_URL}/${id}`);
       setPayrolls(payrolls.filter((p) => p._id !== id));
@@ -140,7 +165,13 @@ const Payroll = () => {
     }
   };
 
+  /** --- Edit with confirmation --- */
   const handleEdit = (p) => {
+    const confirmEdit = window.confirm(
+      `Do you want to update the payroll record for ${p.empName}?`
+    );
+    if (!confirmEdit) return;
+
     setFormData({
       empId: p.empId,
       empName: p.empName,
@@ -158,44 +189,97 @@ const Payroll = () => {
     setShowForm(true);
   };
 
-  const downloadPDF = (p) => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(`Payslip - ${p.empName}`, 14, 20);
-    doc.setFontSize(12);
-    doc.text(`Date: ${p.date}`, 14, 28);
-    doc.text(`Basic Salary: $${p.basicSalary}`, 14, 36);
+ /** --- Download single payslip PDF --- */
+const downloadPDF = (p) => {
+  const doc = new jsPDF();
+  // ===== HEADER WITH GREEN BACKGROUND =====
+  doc.setFillColor(0, 77, 64); // Tailwind green-900 style
+  doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
 
-    doc.text("Allowances:", 14, 44);
-    doc.autoTable({
-      startY: 48,
-      head: [["Title", "Amount"]],
-      body: (p.allowances || []).map((a) => [a.title, `$${a.amount}`]),
+  // Circle Logo
+  doc.setFillColor(255, 255, 255);
+  doc.circle(15, 15, 8, "F");
+  doc.setTextColor(0, 77, 64);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("FF", 15, 18, { align: "center" });
+
+  // FABRIC FLOW Title
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("FABRIC FLOW", 32, 15);
+
+  // Subtitle (Changed to Report Summary)
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("Management System", 32, 22);
+
+  // --- Payroll info ---
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  const today = new Date();
+  const month = today.toLocaleString("default", { month: "long" });
+  const year = today.getFullYear();
+  doc.text(`Payroll Date: ${p.date}`, 14, 35);
+  doc.text(`Download Month: ${month} ${year}`, 14, 40);
+  doc.text(`Employee ID: ${p.empId}`, 14, 45);
+  doc.text(`Payroll ID: ${p.payrollId}`, 14, 50);
+
+  // --- Basic Salary Table ---
+  autoTable(doc, {
+    startY: 60,
+    head: [["Item", "Amount (Rs)"]],
+    body: [
+      ["Basic Salary", p.basicSalary.toFixed(2)],
+      ["Overtime Amount", p.otAmount.toFixed(2)],
+      ["No Pay Deduction", p.noPay.toFixed(2)],
+      ["EPF Employee (8%)", p.epfEmployee.toFixed(2)],
+    ],
+    theme: "grid",
+  });
+
+  // --- Allowances Table ---
+  if (p.allowances && p.allowances.length) {
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 10,
+      head: [["Allowance", "Amount (Rs)"]],
+      body: p.allowances.map((a) => [a.title, a.amount]),
+      theme: "grid",
     });
+  }
 
-    const y = doc.previousAutoTable.finalY + 10;
-    doc.text("Deductions:", 14, y);
-    doc.autoTable({
-      startY: y + 4,
-      head: [["Title", "Amount"]],
-      body: (p.deductions || []).map((d) => [d.title, `$${d.amount}`]),
+  // --- Deductions Table ---
+  if (p.deductions && p.deductions.length) {
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 10,
+      head: [["Deduction", "Amount (Rs)"]],
+      body: p.deductions.map((d) => [d.title, d.amount]),
+      theme: "grid",
     });
+  }
 
-    const y2 = doc.previousAutoTable.finalY + 10;
-    doc.setFontSize(14);
-    doc.text(`Net Salary: $${p.netsalary.toFixed(2)}`, 14, y2);
-    doc.save(`${p.empName}_Payslip.pdf`);
-  };
+  // --- Net Salary ---
+  const netY = doc.lastAutoTable.finalY + 12;
+  doc.setFontSize(14);
+  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(0, 90, 84); // same as header
+  doc.rect(0, netY - 8, 210, 10, "F");
+  doc.text(`Net Salary: Rs ${p.netsalary.toFixed(2)}`, 105, netY, { align: "center" });
 
-  // CHART DATA
-  const totalSalary = payrolls.reduce((sum, p) => sum + p.basicSalary, 0);
-  const totalNet = payrolls.reduce((sum, p) => sum + p.netsalary, 0);
+  doc.save(`${p.empName}_Payslip.pdf`);
+};
+
+  /** --- Summary Chart Data --- */
+  const totalSalary = payrolls.reduce((s, p) => s + (p.basicSalary || 0), 0);
+  const totalNet = payrolls.reduce((s, p) => s + (p.netsalary || 0), 0);
   const totalDeduct = payrolls.reduce(
-    (sum, p) => sum + (p.deductions || []).reduce((a, b) => a + b.amount, 0),
+    (s, p) =>
+      s + (p.deductions || []).reduce((a, b) => a + (Number(b.amount) || 0), 0),
     0
   );
 
-  const chartData = [
+  const summaryChartData = [
     { name: "Basic Salary", amount: totalSalary },
     { name: "Deductions", amount: totalDeduct },
     { name: "Net Salary", amount: totalNet },
@@ -203,7 +287,8 @@ const Payroll = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-white p-6 shadow-md">
+      {/* Sidebar */}
+      <aside className="w-64 bg-[#005a54] text-white shadow-lg flex flex-col">
         <h3 className="text-xl font-semibold mb-6">Payroll Menu</h3>
         <button
           className="w-full mb-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
@@ -219,10 +304,11 @@ const Payroll = () => {
         </button>
       </aside>
 
+      {/* Main content */}
       <main className="flex-1 p-6">
         <h2 className="text-2xl font-semibold mb-4">Payroll</h2>
 
-        {/* PAYROLL FORM */}
+        {/* Payroll Form */}
         {showForm && (
           <form
             className="bg-white p-6 rounded shadow-md max-w-3xl mb-6"
@@ -230,7 +316,7 @@ const Payroll = () => {
           >
             {error && <p className="text-red-500 mb-4">{error}</p>}
 
-            {/* Employee & Basic Salary */}
+            {/* Employee name & salary */}
             <div className="mb-4 grid grid-cols-2 gap-4">
               <div>
                 <label className="block font-semibold">Employee Name</label>
@@ -261,7 +347,7 @@ const Payroll = () => {
               </div>
             </div>
 
-            {/* Working Days, Absent Days, OT */}
+            {/* Other fields */}
             <div className="mb-4 grid grid-cols-4 gap-4">
               <div>
                 <label className="font-semibold">Working Days</label>
@@ -311,14 +397,17 @@ const Payroll = () => {
                   type="number"
                   value={formData.otRate}
                   onChange={(e) =>
-                    setFormData({ ...formData, otRate: Number(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      otRate: Number(e.target.value),
+                    })
                   }
                   className="w-full p-2 border rounded"
                 />
               </div>
             </div>
 
-            {/* Allowances & Deductions */}
+            {/* Allowances */}
             <h3 className="font-semibold mt-4 mb-2">Allowances</h3>
             {formData.allowances.map((a, i) => (
               <div key={i} className="flex gap-2 mb-2">
@@ -347,10 +436,14 @@ const Payroll = () => {
                 <button
                   type="button"
                   className="bg-red-500 text-white px-2 rounded"
-                  onClick={() => {
-                    const arr = formData.allowances.filter((_, idx) => idx !== i);
-                    setFormData({ ...formData, allowances: arr });
-                  }}
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      allowances: formData.allowances.filter(
+                        (_, idx) => idx !== i
+                      ),
+                    })
+                  }
                 >
                   Remove
                 </button>
@@ -369,6 +462,7 @@ const Payroll = () => {
               + Add Allowance
             </button>
 
+            {/* Deductions */}
             <h3 className="font-semibold mt-4 mb-2">Deductions</h3>
             {formData.deductions.map((d, i) => (
               <div key={i} className="flex gap-2 mb-2">
@@ -397,10 +491,14 @@ const Payroll = () => {
                 <button
                   type="button"
                   className="bg-red-500 text-white px-2 rounded"
-                  onClick={() => {
-                    const arr = formData.deductions.filter((_, idx) => idx !== i);
-                    setFormData({ ...formData, deductions: arr });
-                  }}
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      deductions: formData.deductions.filter(
+                        (_, idx) => idx !== i
+                      ),
+                    })
+                  }
                 >
                   Remove
                 </button>
@@ -419,13 +517,13 @@ const Payroll = () => {
               + Add Deduction
             </button>
 
-            {/* CALCULATED TOTALS */}
+            {/* Totals */}
             <div className="mb-4 bg-gray-100 p-4 rounded">
-              <p>Overtime Amount: Rs{totals.otAmount.toFixed(2)}</p>
-              <p>No Pay Deduction: Rs{totals.noPay.toFixed(2)}</p>
-              <p>EPF Employee: Rs{totals.epfEmployee.toFixed(2)}</p>
+              <p>Overtime Amount: Rs {totals.otAmount.toFixed(2)}</p>
+              <p>No Pay Deduction: Rs {totals.noPay.toFixed(2)}</p>
+              <p>EPF Employee: Rs {totals.epfEmployee.toFixed(2)}</p>
               <p className="font-semibold">
-                Net Salary: Rs{totals.netSalary.toFixed(2)}
+                Net Salary: Rs {totals.netSalary.toFixed(2)}
               </p>
             </div>
 
@@ -438,14 +536,17 @@ const Payroll = () => {
           </form>
         )}
 
-        {/* PAYROLL TABLE */}
-        <div className="bg-white p-6 rounded shadow-md mb-6">
+        {/* Payroll Records Table */}
+        <div className="bg-white p-6 rounded shadow-md mb-6 overflow-auto">
           <h3 className="text-xl font-semibold mb-4">Payroll Records</h3>
-          <table className="w-full table-auto border-collapse">
+          <table className="min-w-full table-auto border-collapse">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border px-2 py-1">Employee</th>
                 <th className="border px-2 py-1">Basic Salary</th>
+                <th className="border px-2 py-1">Overtime</th>
+                <th className="border px-2 py-1">No Pay</th>
+                <th className="border px-2 py-1">EPF</th>
                 <th className="border px-2 py-1">Net Salary</th>
                 <th className="border px-2 py-1">Date</th>
                 <th className="border px-2 py-1">Actions</th>
@@ -455,10 +556,13 @@ const Payroll = () => {
               {payrolls.map((p) => (
                 <tr key={p._id}>
                   <td className="border px-2 py-1">{p.empName}</td>
-                  <td className="border px-2 py-1">Rs{p.basicSalary}</td>
-                  <td className="border px-2 py-1">Rs{p.netsalary.toFixed(2)}</td>
+                  <td className="border px-2 py-1">Rs {p.basicSalary}</td>
+                  <td className="border px-2 py-1">Rs {p.otAmount.toFixed(2)}</td>
+                  <td className="border px-2 py-1">Rs {p.noPay.toFixed(2)}</td>
+                  <td className="border px-2 py-1">Rs {p.epfEmployee.toFixed(2)}</td>
+                  <td className="border px-2 py-1">Rs {p.netsalary.toFixed(2)}</td>
                   <td className="border px-2 py-1">{p.date}</td>
-                  <td className="border px-2 py-1 flex gap-2">
+                  <td className="border px-2 py-1 flex flex-wrap gap-2">
                     <button
                       className="bg-yellow-500 text-white px-2 rounded"
                       onClick={() => handleEdit(p)}
@@ -472,17 +576,17 @@ const Payroll = () => {
                       Delete
                     </button>
                     <button
-                      className="bg-blue-500 text-white px-2 rounded"
+                      className="bg-blue-600 text-white px-2 rounded"
                       onClick={() => downloadPDF(p)}
                     >
-                      PDF
+                      Download 
                     </button>
                   </td>
                 </tr>
               ))}
               {payrolls.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center py-4">
+                  <td colSpan="8" className="text-center py-4">
                     No payroll records found.
                   </td>
                 </tr>
@@ -491,21 +595,8 @@ const Payroll = () => {
           </table>
         </div>
 
-        {/* PAYROLL SUMMARY CHART */}
-        {!showForm && (
-          <div className="bg-white p-6 rounded shadow-md">
-            <h3 className="text-xl font-semibold mb-4">Payroll Summary</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="amount" fill="#2563EB" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        {/* Summary Chart */}
+        
       </main>
     </div>
   );
