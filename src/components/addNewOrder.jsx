@@ -72,7 +72,7 @@ const getMinAllowedDate = () => {
   return formatDateToString(date);
 };
 
-// Phone number validation and formatting
+// Enhanced phone number validation
 const validatePhoneNumber = (phone) => {
   // Remove all non-digit characters
   const digitsOnly = phone.replace(/\D/g, '');
@@ -120,6 +120,7 @@ const validateEmail = (email) => {
   return errors;
 };
 
+// Enhanced phone number validation with additional rules (ALLOWS starting with 0)
 const validatePhoneNumberEnhanced = (phone) => {
   const trimmedPhone = phone.trim();
   const digitsOnly = trimmedPhone.replace(/\D/g, '');
@@ -133,6 +134,31 @@ const validatePhoneNumberEnhanced = (phone) => {
     errors.push(`Phone number must be exactly 10 digits (${digitsOnly.length}/10)`);
   } else if (!/^[0-9]/.test(digitsOnly)) {
     errors.push("Phone number must contain only digits (0-9)");
+  } else {
+    // Check if all digits are the same
+    const allSameDigit = digitsOnly.split('').every(digit => digit === digitsOnly.charAt(0));
+    if (allSameDigit) {
+      errors.push("Phone number cannot have all same digits (e.g., 1111111111)");
+    }
+    
+    // Check for common invalid patterns
+    const invalidPatterns = [
+      '1234567890',
+      '0987654321',
+      '1111111111',
+      '2222222222',
+      '3333333333',
+      '4444444444',
+      '5555555555',
+      '6666666666',
+      '7777777777',
+      '8888888888',
+      '9999999999'
+    ];
+    
+    if (invalidPatterns.includes(digitsOnly)) {
+      errors.push("Please enter a valid phone number (not a sequence or repeated digits)");
+    }
   }
   
   return errors;
@@ -541,8 +567,9 @@ function AddNewOrder() {
 
     // Handle phone number validation and formatting
     if (name === 'customer.phone') {
-      const validatedPhone = validatePhoneNumber(value);
-      const errors = validateField(name, validatedPhone);
+      // Allow only digits and limit to 10 characters
+      const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+      const errors = validateField(name, digitsOnly);
       
       // Keep old phone error for backward compatibility
       if (errors.length > 0) {
@@ -555,7 +582,7 @@ function AddNewOrder() {
         ...prev,
         customer: {
           ...prev.customer,
-          phone: validatedPhone
+          phone: digitsOnly
         }
       }));
       return;
@@ -615,8 +642,6 @@ function AddNewOrder() {
       }));
     }
   };
-
-
 
   // Helper component for displaying validation errors
   const ValidationErrors = ({ errors }) => {
@@ -941,7 +966,7 @@ function AddNewOrder() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number * <span className="text-xs text-gray-500">(10 digits)</span>
+                  Phone Number * <span className="text-xs text-gray-500">(10 digits, no repeating digits)</span>
                 </label>
                 <input
                   type="tel"
@@ -951,7 +976,7 @@ function AddNewOrder() {
                   required
                   maxLength="10"
                   className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerPhone)}`}
-                  placeholder="Enter 10-digit number (e.g., 0123456789)"
+                  placeholder="Enter 10-digit number (e.g., 0712345678 or 7123456789)"
                   pattern="[0-9]{10}"
                 />
                 <ValidationErrors errors={validationErrors.customerPhone} />

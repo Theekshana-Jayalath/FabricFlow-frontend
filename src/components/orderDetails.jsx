@@ -195,28 +195,35 @@ function OrderDetails() {
     navigate('/add-new-order');
   };
 
-  // Filter orders based on search term (Order ID) and status filters
-  const filteredOrders = orders.filter(order => {
-    // Search filter
-    const matchesSearch = !searchTerm.trim() || 
-      order.orderId?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Order status filter
-    const matchesOrderStatus = !orderStatusFilter || 
-      order.orderStatus === orderStatusFilter;
-    
-    // Payment status filter
-    const matchesPaymentStatus = !paymentStatusFilter || 
-      order.paymentStatus === paymentStatusFilter;
-    
-    return matchesSearch && matchesOrderStatus && matchesPaymentStatus;
-  });
+  // Filter and sort orders - most recent first
+  const filteredAndSortedOrders = orders
+    .filter(order => {
+      // Search filter
+      const matchesSearch = !searchTerm.trim() || 
+        order.orderId?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Order status filter
+      const matchesOrderStatus = !orderStatusFilter || 
+        order.orderStatus === orderStatusFilter;
+      
+      // Payment status filter
+      const matchesPaymentStatus = !paymentStatusFilter || 
+        order.paymentStatus === paymentStatusFilter;
+      
+      return matchesSearch && matchesOrderStatus && matchesPaymentStatus;
+    })
+    .sort((a, b) => {
+      // Sort by creation date - most recent first
+      const dateA = new Date(a.createdAt || a.orderDate);
+      const dateB = new Date(b.createdAt || b.orderDate);
+      return dateB - dateA; // Descending order (newest first)
+    });
 
   // Debug logs
   console.log("Current state:", { orders, loading, error });
   console.log("Orders is array?", Array.isArray(orders));
   console.log("Search term:", searchTerm);
-  console.log("Filtered orders:", filteredOrders.length);
+  console.log("Filtered and sorted orders:", filteredAndSortedOrders.length);
 
   if (loading) {
     return (
@@ -372,7 +379,7 @@ function OrderDetails() {
       {/* Debug info */}
       <p className="text-sm text-gray-500 mb-4">
         {(searchTerm || orderStatusFilter || paymentStatusFilter) 
-          ? `Showing ${filteredOrders.length} of ${orders.length} orders` +
+          ? `Showing ${filteredAndSortedOrders.length} of ${orders.length} orders` +
             (searchTerm ? ` matching "${searchTerm}"` : "") +
             (orderStatusFilter ? ` with order status "${orderStatusFilter}"` : "") +
             (paymentStatusFilter ? ` with payment status "${paymentStatusFilter}"` : "")
@@ -396,7 +403,7 @@ function OrderDetails() {
             Add First Order
           </button>
         </div>
-      ) : filteredOrders.length === 0 && (searchTerm || orderStatusFilter || paymentStatusFilter) ? (
+      ) : filteredAndSortedOrders.length === 0 && (searchTerm || orderStatusFilter || paymentStatusFilter) ? (
         <div className="text-center bg-white p-8 rounded-lg shadow-md">
           <FaFilter className="mx-auto text-gray-400 text-4xl mb-4" />
           <p className="text-gray-500 mb-4">
@@ -435,7 +442,7 @@ function OrderDetails() {
           </div>
         </div>
       ) : (
-        filteredOrders.map((order) => (
+        filteredAndSortedOrders.map((order) => (
           <div key={order.orderId || order._id} className="bg-white rounded-2xl shadow-md p-6 mb-6">
             {/* Order Header */}
             <div className="flex justify-between items-center mb-4">

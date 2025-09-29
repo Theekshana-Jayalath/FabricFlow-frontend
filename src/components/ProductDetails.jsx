@@ -11,7 +11,7 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(''); // Changed from 50 to empty string
   const [addedToCart, setAddedToCart] = useState(false);
 
   // Fabric consumption per product category (meters per item)
@@ -362,18 +362,18 @@ const ProductDetails = () => {
   const handleClearSelections = () => {
     setSelectedSize('');
     setSelectedMaterial('');
-    setQuantity(1);
+    setQuantity(''); // Changed from 50 to empty string
     setAddedToCart(false);
   };
 
   // Check if any selection has been made
   const hasSelections = () => {
-    return selectedSize !== '' || selectedMaterial !== '' || quantity !== 1;
+    return selectedSize !== '' || selectedMaterial !== '' || quantity !== ''; // Changed from 50 to empty string
   };
 
   // Check if all required selections are made for total calculation
   const hasCompleteSelection = () => {
-    return selectedSize !== '' && selectedMaterial !== '' && quantity >= 1;
+    return selectedSize !== '' && selectedMaterial !== '' && quantity >= 50; // Keep minimum validation of 50
   };
 
   useEffect(() => {
@@ -384,7 +384,7 @@ const ProductDetails = () => {
       setLoading(false);
       setSelectedSize('');
       setSelectedMaterial('');
-      setQuantity(1);
+      setQuantity(''); // Changed from 50 to empty string
       setAddedToCart(false);
     }, 500);
   }, [productId]);
@@ -409,15 +409,15 @@ const ProductDetails = () => {
   };
 
   const handleQuantityBlur = () => {
-    if (quantity === '' || quantity < 1) {
-      setQuantity(1);
+    if (quantity === '' || quantity < 50) { // Keep minimum validation of 50
+      setQuantity(50); // Set to 50 if empty or less than 50
     } else if (quantity > 1000) {
       setQuantity(1000);
     }
   };
 
   const isAddToCartDisabled = () => {
-    return !selectedSize || !selectedMaterial || quantity < 1 || quantity === '';
+    return !selectedSize || !selectedMaterial || quantity < 50 || quantity === ''; // Keep minimum validation of 50
   };
 
   const handleAddToCart = () => {
@@ -448,7 +448,7 @@ const ProductDetails = () => {
     setTimeout(() => {
       setSelectedSize('');
       setSelectedMaterial('');
-      setQuantity(0);
+      setQuantity(''); // Changed from 50 to empty string
       setAddedToCart(false);
     }, 2000);
   };
@@ -601,9 +601,6 @@ const ProductDetails = () => {
               </div>
             </div>
 
-
-
-
             {/* Material Selection Dropdown */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -698,14 +695,7 @@ const ProductDetails = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Size: {selectedSize && <span className="text-blue-600 font-semibold">{selectedSize}</span>}
                 </label>
-                {selectedSize && (
-                  <button
-                    onClick={() => setSelectedSize('')}
-                    className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1"
-                  >
-                    <FaTimes /> Clear
-                  </button>
-                )}
+              
               </div>
               <div className="flex flex-wrap gap-2">
                 {getSizeOptions(product.category).map((size) => (
@@ -733,36 +723,29 @@ const ProductDetails = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Quantity:
                 </label>
-                {quantity !== 1 && (
-                  <button
-                    onClick={() => setQuantity(1)}
-                    className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1"
-                  >
-                    <FaUndo /> Reset to 1
-                  </button>
-                )}
+                
               </div>
               <div className="flex items-center space-x-3">
                 <input
                   type="number"
-                  min="1"
+                  min="50"
                   max="1000"
                   value={quantity}
                   onChange={handleDirectQuantityChange}
                   onBlur={handleQuantityBlur}
-                  placeholder="Enter quantity (1-1000)"
+                  placeholder="Enter quantity (minimum 50)" // Updated placeholder
                   className={`w-48 text-center border rounded-lg py-3 px-4 text-lg ${
-                    quantity < 1 || quantity > 1000 || quantity === ''
+                    quantity < 50 || quantity > 1000 || quantity === ''
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-300'
                   }`}
                 />
-                <span className="text-sm text-gray-500">Range: 1-1000</span>
+                <span className="text-sm text-gray-500">Min: 50, Max: 1000</span> {/* Updated display */}
               </div>
-              {(quantity < 1 || quantity > 1000 || quantity === '') && (
+              {(quantity < 50 || quantity > 1000 || quantity === '') && (
                 <p className="text-sm text-red-600">
-                  {quantity === '' ? 'Please enter a quantity' : 
-                   quantity < 1 ? 'Minimum quantity is 1' : 
+                  {quantity === '' ? 'Please enter a quantity (minimum 50)' : // Updated error message
+                   quantity < 50 ? 'Minimum quantity is 50' : 
                    'Maximum quantity is 1000'}
                 </p>
               )}
@@ -805,13 +788,12 @@ const ProductDetails = () => {
                         Base price: {formatPrice(product.price)} per item
                       </span>
                       <div className="text-sm text-gray-400">
-                        Min. order quantity: 1 item
+                        Min. order quantity: 50 items
                       </div>
                     </div>
                   </>
                 )}
               </div>
-            
             </div>
 
             {/* Cart Summary */}
@@ -852,7 +834,7 @@ const ProductDetails = () => {
                   <>
                     <FaShoppingCart />
                     {isAddToCartDisabled() 
-                      ? 'Select Material, Size & Valid Quantity' 
+                      ? 'Select Material, Size & Valid Quantity (Min: 50)' 
                       : `Add to Cart - ${formatPrice(getTotalPrice())}`
                     }
                   </>
