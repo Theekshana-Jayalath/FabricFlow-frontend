@@ -123,12 +123,50 @@ const validateEmail = (email) => {
   
   if (!trimmedEmail) {
     errors.push("Email is required");
-  } else if (trimmedEmail.length > 100) {
+    return errors;
+  }
+  
+  // Length validation
+  if (trimmedEmail.length > 100) {
     errors.push("Email must not exceed 100 characters");
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-    errors.push("Please enter a valid email address");
-  } else if (/\s/.test(trimmedEmail)) {
+  }
+  
+  // Check for spaces
+  if (/\s/.test(trimmedEmail)) {
     errors.push("Email cannot contain spaces");
+  }
+  
+  // First letter must be simple (lowercase letter)
+  if (!/^[a-z]/.test(trimmedEmail)) {
+    errors.push("Email must start with a simple lowercase letter (a-z)");
+  }
+  
+  // Enhanced email format validation
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    errors.push("Please enter a valid email address (e.g., user@example.com)");
+  }
+  
+  // Check for consecutive dots
+  if (/\.{2,}/.test(trimmedEmail)) {
+    errors.push("Email cannot contain consecutive dots");
+  }
+  
+  // Check for invalid characters at start/end
+  if (/^[.-]|[.-]$/.test(trimmedEmail)) {
+    errors.push("Email cannot start or end with dots or hyphens");
+  }
+  
+  // Check domain part specifically
+  const atIndex = trimmedEmail.indexOf('@');
+  if (atIndex > 0) {
+    const domain = trimmedEmail.substring(atIndex + 1);
+    if (domain.length < 3) {
+      errors.push("Domain must be at least 3 characters long");
+    }
+    if (!/^[a-zA-Z0-9.-]+$/.test(domain)) {
+      errors.push("Domain contains invalid characters");
+    }
   }
   
   return errors;
@@ -1154,7 +1192,7 @@ function AddNewOrder() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email * <span className="text-xs text-gray-500">(max 100 chars)</span>
+                        Email Address * <span className="text-xs text-gray-500">(max 100 chars, valid format required)</span>
                       </label>
                       <input
                         type="email"
@@ -1164,7 +1202,8 @@ function AddNewOrder() {
                         required
                         maxLength="100"
                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${getBorderColor(validationErrors.customerEmail)}`}
-                        placeholder="example@domain.com (no spaces)"
+                        placeholder="user@example.com (no spaces, valid domain required)"
+                        autoComplete="email"
                       />
                       <ValidationErrors errors={validationErrors.customerEmail} />
                     </div>

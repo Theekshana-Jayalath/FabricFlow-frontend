@@ -68,27 +68,118 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
   // Comprehensive validation helper functions
   const validateUserName = (name) => {
     const trimmed = name.trim();
+    
     if (!trimmed) {
       return 'Name is required';
     }
-    if (trimmed.length < 3) {
-      return 'Name must be at least 3 characters';
+    
+    // Length validation
+    if (trimmed.length < 2) {
+      return 'Name must be at least 2 characters long';
     }
-    if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
-      return 'Name can only contain letters and spaces';
+    
+    if (trimmed.length > 50) {
+      return 'Name must not exceed 50 characters';
     }
+    
+    // Character validation - only letters, spaces, apostrophes, and hyphens
+    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) {
+      return 'Name can only contain letters, spaces, apostrophes, and hyphens';
+    }
+    
+    // Check for consecutive spaces
+    if (/\s{2,}/.test(trimmed)) {
+      return 'Name cannot contain consecutive spaces';
+    }
+    
+    // Check for invalid start/end characters
+    if (/^[\s'-]|[\s'-]$/.test(trimmed)) {
+      return 'Name cannot start or end with spaces, apostrophes, or hyphens';
+    }
+    
+    // Check for minimum word count (at least first name)
+    const words = trimmed.split(/\s+/).filter(word => word.length > 0);
+    if (words.length < 1) {
+      return 'Please enter at least a first name';
+    }
+    
+    // Validate each word
+    for (const word of words) {
+      if (word.length < 1) {
+        return 'Each name part must be at least 1 character';
+      }
+      
+      // Check for repeated characters (more than 2 consecutive)
+      if (/(.)\1{2,}/.test(word)) {
+        return 'Name cannot contain more than 2 consecutive identical letters';
+      }
+    }
+    
+    // Check for valid name patterns (no numbers or special chars except apostrophes and hyphens)
+    if (/[0-9]/.test(trimmed)) {
+      return 'Name cannot contain numbers';
+    }
+    
     return '';
   };
 
   const validateEmail = (email) => {
     const trimmed = email.trim();
+    
     if (!trimmed) {
       return 'Email address is required';
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmed)) {
-      return 'Please enter a valid email address';
+    
+    // Length validation
+    if (trimmed.length > 100) {
+      return 'Email must not exceed 100 characters';
     }
+    
+    // Check for spaces
+    if (/\s/.test(trimmed)) {
+      return 'Email cannot contain spaces';
+    }
+    
+    // First letter must be simple (lowercase letter)
+    if (!/^[a-z]/.test(trimmed)) {
+      return 'Email must start with a simple lowercase letter (a-z)';
+    }
+    
+    // Enhanced email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Please enter a valid email address (e.g., user@example.com)';
+    }
+    
+    // Check for consecutive dots
+    if (/\.{2,}/.test(trimmed)) {
+      return 'Email cannot contain consecutive dots';
+    }
+    
+    // Check for invalid characters at start/end
+    if (/^[.-]|[.-]$/.test(trimmed)) {
+      return 'Email cannot start or end with dots or hyphens';
+    }
+    
+    // Check domain part specifically
+    const atIndex = trimmed.indexOf('@');
+    if (atIndex > 0) {
+      const domain = trimmed.substring(atIndex + 1);
+      if (domain.length < 3) {
+        return 'Domain must be at least 3 characters long';
+      }
+      if (!/^[a-zA-Z0-9.-]+$/.test(domain)) {
+        return 'Domain contains invalid characters';
+      }
+      
+      // Check for valid top-level domain
+      const domainParts = domain.split('.');
+      const tld = domainParts[domainParts.length - 1];
+      if (tld.length < 2) {
+        return 'Top-level domain must be at least 2 characters';
+      }
+    }
+    
     return '';
   };
 
@@ -627,9 +718,16 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   disabled={isViewMode}
                   error={!!errors.name}
-                  helperText={errors.name}
+                  helperText={errors.name || "Enter first and last name (2-50 characters, letters only)"}
                   required
                   variant="outlined"
+                  placeholder="John Doe"
+                  inputProps={{
+                    maxLength: 50,
+                    autoComplete: "name",
+                    pattern: "[a-zA-Z\\s'-]+",
+                    title: "Name can only contain letters, spaces, apostrophes, and hyphens"
+                  }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': { borderColor: '#005A54' },
@@ -649,9 +747,15 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   disabled={isViewMode}
                   error={!!errors.email}
-                  helperText={errors.email}
+                  helperText={errors.email || "Enter a valid email address (max 100 characters)"}
                   required
                   variant="outlined"
+                  placeholder="user@example.com"
+                  inputProps={{
+                    maxLength: 100,
+                    autoComplete: "email",
+                    pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
+                  }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       '&:hover fieldset': { borderColor: '#005A54' },

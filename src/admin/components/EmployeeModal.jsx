@@ -136,13 +136,54 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
 
   const validateEmail = (email) => {
     const trimmed = email.trim();
+    
     if (!trimmed) {
       return 'Email address is required';
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmed)) {
-      return 'Please enter a valid email address';
+    
+    // Length validation
+    if (trimmed.length > 100) {
+      return 'Email must not exceed 100 characters';
     }
+    
+    // Check for spaces
+    if (/\s/.test(trimmed)) {
+      return 'Email cannot contain spaces';
+    }
+    
+    // First letter must be simple (lowercase letter)
+    if (!/^[a-z]/.test(trimmed)) {
+      return 'Email must start with a simple lowercase letter (a-z)';
+    }
+    
+    // Enhanced email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Please enter a valid email address (e.g., user@example.com)';
+    }
+    
+    // Check for consecutive dots
+    if (/\.{2,}/.test(trimmed)) {
+      return 'Email cannot contain consecutive dots';
+    }
+    
+    // Check for invalid characters at start/end
+    if (/^[.-]|[.-]$/.test(trimmed)) {
+      return 'Email cannot start or end with dots or hyphens';
+    }
+    
+    // Check domain part specifically
+    const atIndex = trimmed.indexOf('@');
+    if (atIndex > 0) {
+      const domain = trimmed.substring(atIndex + 1);
+      if (domain.length < 3) {
+        return 'Domain must be at least 3 characters long';
+      }
+      if (!/^[a-zA-Z0-9.-]+$/.test(domain)) {
+        return 'Domain contains invalid characters';
+      }
+    }
+    
     return '';
   };
 

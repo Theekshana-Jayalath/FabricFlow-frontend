@@ -58,8 +58,10 @@ function Login() {
       case 'email':
         if (!trimmedValue) {
           fieldError = 'Email is required';
+        } else if (!/^[a-z]/.test(trimmedValue)) {
+          fieldError = 'Email must start with a simple lowercase letter (a-z)';
         } else {
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
           if (!emailRegex.test(trimmedValue)) {
             fieldError = 'Please enter a valid email address';
           }
@@ -96,8 +98,10 @@ function Login() {
     // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
+    } else if (!/^[a-z]/.test(formData.email.trim())) {
+      newErrors.email = 'Email must start with a simple lowercase letter (a-z)';
     } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(formData.email.trim())) {
         newErrors.email = 'Please enter a valid email address (name@domain.com)';
       }
