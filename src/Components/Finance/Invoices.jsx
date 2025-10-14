@@ -93,32 +93,10 @@ function OrderDetails() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div>
-        <button
-          className="text-left px-4 py-2 rounded hover:bg-blue-100 font-semibold"
-          onClick={() => setFilter("ALL")}
-        >
-          Invoice
-        </button>
-        <button
-          className="text-left px-4 py-2 rounded hover:bg-blue-100 font-semibold"
-          onClick={() => navigate("/invoiceSummury")}
-        >
-          Invoice Summary
-        </button>
-      </div>
-
-=======
-    <div className="flex min-h-screen">
-      
-       
->>>>>>> Stashed changes
+    <div className="flex min-h-screen ">
       {/* Main Content */}
-      <div className="flex-1 p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Invoices</h1>
+      <div className="flex-1 p-2">
+        <h1 className="text-3xl font-bold text-[#005654] mb-6">Invoices</h1>
 
         {/* Filters */}
         <div className="mb-6 flex flex-wrap gap-4 items-center">

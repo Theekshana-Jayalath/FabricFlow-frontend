@@ -261,18 +261,14 @@ const Payroll = () => {
 =======
     <div className="p-6">
       {/* Buttons */}
-      <div className="flex gap-3 mb-4">
->>>>>>> Stashed changes
+      <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-[#005A54] text-white rounded hover:bg-[#00756D]"
+          className="px-4 py-2 bg-[#005654] text-white rounded hover:bg-[#00756D]"
         >
           Add Payroll
         </button>
-      </div>
 
-      {/* ===== Search Bar ===== */}
-      <div className="mb-4">
         <input
           type="text"
           placeholder="Search by Employee Name..."
@@ -282,59 +278,13 @@ const Payroll = () => {
         />
       </div>
 
+
       {/* ===== Add/Update Payroll Form (full original code) ===== */}
       {showForm && (
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded shadow mb-6 space-y-4"
         >
-<<<<<<< Updated upstream
-          📊 Payroll Summary
-        </button>
-     
-</div>
-      {/* Main content */}
-      <main className="flex-1 p-6">
-        <h2 className="text-2xl font-semibold mb-4">Payroll</h2>
-
-        {/* Payroll Form */}
-        {showForm && (
-          <form
-            className="bg-white p-6 rounded shadow-md max-w-3xl mb-6"
-            onSubmit={handleSubmit}
-          >
-            {error && <p className="text-red-500 mb-4">{error}</p>}
-
-            {/* Employee name & salary */}
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold">Employee Name</label>
-                <input
-                  type="text"
-                  value={formData.empName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, empName: e.target.value })
-                  }
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-semibold">Basic Salary</label>
-                <input
-                  type="number"
-                  value={formData.basicSalary}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicSalary: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-=======
           {error && (
             <p className="text-red-600 font-semibold text-sm">{error}</p>
           )}
@@ -352,7 +302,6 @@ const Payroll = () => {
                 required
                 className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
               />
->>>>>>> Stashed changes
             </div>
             <div className="flex flex-col">
               <label className="font-medium mb-1">Basic Salary</label>
@@ -545,9 +494,9 @@ const Payroll = () => {
           <div className="flex gap-3 mt-4">
             <button
               type="submit"
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-4 py-2 bg-[#005654] text-white rounded hover:bg-[#00756D]"
             >
-              {editingId ? "Update Payroll" : "Add Payroll"}
+              {editingId ? "Update Payroll" : "Save Payroll"}
             </button>
             <button
               type="button"
@@ -589,7 +538,7 @@ const Payroll = () => {
                 <td className="py-2 px-4 border-b flex gap-2">
                   <button
                     onClick={() => handleEdit(p)}
-                    className="text-[#005A54] hover:text-yellow-800 border border-[#005A54]  hover:border-yellow-800 px-2 py-1 rounded text-sm font-medium transition"
+                    className="text-yellow-600 hover:text-yellow-800 border border-yellow-600 hover:border-yellow-800 px-2 py-1 rounded text-sm font-medium transition"
                   >
                     Update
                   </button>
