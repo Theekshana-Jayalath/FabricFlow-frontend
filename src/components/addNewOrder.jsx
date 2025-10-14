@@ -33,6 +33,41 @@ const MATERIALS = [
   "Bamboo Blend (160 GSM)"
 ];
 
+// Function to map ProductDetails material names to addNewOrder material names
+const mapMaterialName = (productDetailsMaterial) => {
+  if (!productDetailsMaterial) return "";
+  
+  // Handle both object and string formats
+  const materialName = typeof productDetailsMaterial === 'object' 
+    ? productDetailsMaterial.name 
+    : productDetailsMaterial;
+  
+  // Create mapping for different material name formats
+  const materialMapping = {
+    "Cotton Blend (140 GSM)": "Cotton Blend (180 GSM)",
+    "Premium Cotton Blend (160 GSM)": "Premium Cotton (200 GSM)",
+    "Cotton Polyester Blend (150 GSM)": "Cotton Blend (180 GSM)",
+    "100% Pique Cotton (180 GSM)": "Cotton Blend (180 GSM)",
+    "Cotton Jersey with Elastane (160 GSM)": "Cotton Stretch (220 GSM)",
+    "Bamboo Cotton Blend (140 GSM)": "Bamboo Blend (160 GSM)",
+    "Premium Linen Blend (130 GSM)": "Linen Blend (150 GSM)",
+    "Polyester Cotton Blend (160 GSM)": "Polyester Blend (170 GSM)"
+  };
+  
+  // Check if we have a direct mapping
+  if (materialMapping[materialName]) {
+    return materialMapping[materialName];
+  }
+  
+  // If no exact match, try to find the closest match in MATERIALS array
+  const closeMatch = MATERIALS.find(material => 
+    material.toLowerCase().includes(materialName.toLowerCase().split(' ')[0]) ||
+    materialName.toLowerCase().includes(material.toLowerCase().split(' ')[0])
+  );
+  
+  return closeMatch || MATERIALS[0]; // Default to first material if no match
+};
+
 // Function to generate auto order ID
 const generateOrderId = () => {
   const prefix = "ORD";
@@ -565,6 +600,9 @@ function AddNewOrder() {
       doc.text("Generated on " + new Date().toLocaleDateString(), 10, footerY + 10);
       doc.text("© 2025 Fabric Flow. All rights reserved.", 140, footerY + 10);
 
+
+
+      
       // Save the PDF with new naming convention
       const fileName = `FabricFlow_Order_${formData.orderId || Date.now()}.pdf`;
       doc.save(fileName);
@@ -618,14 +656,23 @@ function AddNewOrder() {
   useEffect(() => {
     if (cartData && cartData.length > 0 && !cartDataApplied) {
       console.log("Auto-filling order items from cart:", cartData);
+      
+      // Debug: Log the material data being passed
+      cartData.forEach((item, index) => {
+        console.log(`Item ${index} material:`, item.material);
+      });
 
       const autoFilledItems = cartData.map(item => ({
         productId: item.productId.toString(),
         size: item.size,
         color: item.color,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        material: mapMaterialName(item.material)
       }));
+
+      // Debug: Log the final mapped items
+      console.log("Auto-filled items with materials:", autoFilledItems);
 
       setFormData(prev => ({
         ...prev,
