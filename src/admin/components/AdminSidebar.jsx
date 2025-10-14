@@ -103,7 +103,11 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
         { text: 'Vehicle Management', path: '/admin/sales/vehicles', icon: <LocalShipping /> },
         { text: 'Delivery Management', path: '/admin/delivery/management', icon: <LocalShipping /> },
         { text: 'All Delivery Orders', path: '/admin/orders/all-delivery-orders', icon: <Assignment /> },
+<<<<<<< Updated upstream
         //{ text: 'Asign Orders', path: '/admin/sales/asignOrders', icon: <People /> },
+=======
+      //  { text: 'Asign Orders', path: '/admin/sales/asignOrders', icon: <People /> },
+>>>>>>> Stashed changes
         
       ]
     }

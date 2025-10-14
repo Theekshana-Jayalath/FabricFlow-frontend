@@ -15,12 +15,21 @@ import {
   FaSignOutAlt,
   FaUserCircle,
 } from 'react-icons/fa';
+<<<<<<< Updated upstream
 
+=======
+import '../Finance/Dashbord.css';
+import './Expenses.css';
+>>>>>>> Stashed changes
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const ExpensesURL = "http://localhost:5000/api/expenses";
+<<<<<<< Updated upstream
 const PurchasesURL = "http://localhost:5000/purchases";
+=======
+const PurchasesURL = "http://localhost:5000/api/Purchase";
+>>>>>>> Stashed changes
 const PayrollURL = "http://localhost:5000/api/payrolls";
 const ProfileURL = "http://localhost:5000/api/profile";
 const OrdersURL = "http://localhost:5000/api/orders";
@@ -171,7 +180,13 @@ const FinanceDashboard = ({ onTotalExpensesChange }) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto">
+<<<<<<< Updated upstream
         
+=======
+        {/* Header */}
+        
+
+>>>>>>> Stashed changes
         {/* Content */}
         <div className="p-6 flex-1 flex flex-col gap-6">
           {/* Metrics */}

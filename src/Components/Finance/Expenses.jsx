@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Pie } from "react-chartjs-2";
-
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,12 +13,12 @@ import {
 } from "chart.js";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2"; // SweetAlert2
+import Swal from "sweetalert2";
 
 ChartJS.register(CategoryScale, LinearScale, ArcElement, Title, Tooltip, Legend);
 
 const EXPENSE_URL = "http://localhost:5000/api/expenses";
-const PURCHASE_URL = "http://localhost:5000/purchases";
+const PURCHASE_URL = "http://localhost:5000/api/Purchase";
 const PAYROLL_URL = "http://localhost:5000/api/payrolls";
 
 const Expenses = () => {
@@ -28,6 +26,16 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [payrolls, setPayrolls] = useState([]);
+
+  // popup state
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [updateForm, setUpdateForm] = useState({
+    date: "",
+    category: "",
+    amount: "",
+    description: "",
+  });
 
   useEffect(() => {
     fetchExpenses();
@@ -62,7 +70,6 @@ const Expenses = () => {
     }
   };
 
-  // Totals
   const categoryTotals = {
     transport: expenses
       .filter((e) => e.category === "transport")
@@ -71,34 +78,31 @@ const Expenses = () => {
       .filter((e) => e.category === "other")
       .reduce((sum, e) => sum + Number(e.amount), 0),
   };
-  const totalPurchases = purchases.reduce((sum, p) => sum + Number(p.totalCost || 0), 0);
-  const totalPayrolls = payrolls.reduce((sum, p) => sum + Number(p.netsalary || 0), 0);
-  const total = categoryTotals.transport + categoryTotals.other + totalPurchases + totalPayrolls;
+  const totalPurchases = purchases.reduce(
+    (sum, p) => sum + Number(p.totalCost || 0),
+    0
+  );
+  const totalPayrolls = payrolls.reduce(
+    (sum, p) => sum + Number(p.netsalary || 0),
+    0
+  );
+  const total =
+    categoryTotals.transport +
+    categoryTotals.other +
+    totalPurchases +
+    totalPayrolls;
 
-  const categoryPercent = {
-    transport: total ? ((categoryTotals.transport / total) * 100).toFixed(1) : 0,
-    other: total ? ((categoryTotals.other / total) * 100).toFixed(1) : 0,
-    purchases: total ? ((totalPurchases / total) * 100).toFixed(1) : 0,
-    payroll: total ? ((totalPayrolls / total) * 100).toFixed(1) : 0,
-  };
-
-  const pieData = {
-    labels: ["Transport", "Other", "Purchases", "Payroll"],
-    datasets: [
-      {
-        data: [categoryTotals.transport, categoryTotals.other, totalPurchases, totalPayrolls],
-        backgroundColor: ["#10b981", "#f97316", "#3b82f6", "#facc15"],
-        hoverBackgroundColor: ["#047857", "#dc2626", "#1e40af", "#ca8a04"],
-      },
-    ],
-  };
-
-  // === Handlers ===
   const handleEdit = (expense) => {
-    navigate("/updateExpenses", { state: { expense } });
+    setSelectedExpense(expense);
+    setUpdateForm({
+      date: expense.date?.substring(0, 10) || "",
+      category: expense.category || "",
+      amount: expense.amount || "",
+      description: expense.description || "",
+    });
+    setShowUpdateModal(true);
   };
 
-  // Delete expense handler with SweetAlert2
   const handleDelete = async (expenseId) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -117,7 +121,6 @@ const Expenses = () => {
         setExpenses((prevExpenses) =>
           prevExpenses.filter((expense) => expense.expenseId !== expenseId)
         );
-
         Swal.fire("Deleted!", "Expense has been deleted.", "success");
       } catch (err) {
         console.error("Delete failed:", err);
@@ -126,194 +129,281 @@ const Expenses = () => {
     }
   };
 
-  // Update success message
-  const handleUpdateSuccess = () => {
-    Swal.fire({
-      icon: "success",
-      title: "Updated!",
-      text: "Expense has been updated successfully.",
-      timer: 2000,
-      showConfirmButton: false,
-    });
+  const handleUpdateChange = (e) => {
+    const { name, value } = e.target;
+    setUpdateForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put(
+        `${EXPENSE_URL}/${selectedExpense.expenseId}`,
+        updateForm
+      );
+
+      if (res.status === 200) {
+        Swal.fire({
+          icon: "success",
+          title: "Updated!",
+          text: "Expense has been updated successfully.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        setShowUpdateModal(false);
+        fetchExpenses(); // refresh list
+      }
+    } catch (error) {
+      console.error("Update failed:", error);
+      Swal.fire("Error", "Failed to update expense.", "error");
+    }
   };
 
   return (
+<<<<<<< Updated upstream
     <div className="flex h-screen bg-gray-50 font-sans">
       <div>
+=======
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Expenses Management</h1>
+>>>>>>> Stashed changes
         <button
-          className="bg-[#10b981] p-2 rounded hover:bg-[#047857] mb-4"
           onClick={() => navigate("/admin/finance/expenses/addExpenses")}
+          className="bg-[#005A54] text-white px-4 py-2 rounded-lg hover:bg-[#005A54]transition"
         >
-          ➕ Add Expense
+          Add Expense
         </button>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 overflow-auto space-y-8">
-        {/* Tables Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Transport Table */}
-          <div className="bg-white p-4 rounded-lg shadow-md overflow-auto max-h-[40vh]">
-            <h3 className="font-bold mb-2">Transport & Logistics</h3>
-            <table className="min-w-full table-auto">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2">ID</th>
-                  <th className="p-2">Date</th>
-                  <th className="p-2">Amount</th>
-                  <th className="p-2">Description</th>
-                  <th className="p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses
-                  .filter((e) => e.category === "transport")
-                  .map((e) => (
-                    <tr key={e.expenseId} className="border-b">
-                      <td className="p-2">{e.expenseId}</td>
-                      <td className="p-2">{e.date?.substring(0, 10)}</td>
-                      <td className="p-2">Rs {Number(e.amount).toFixed(2)}</td>
-                      <td className="p-2">{e.description}</td>
-                      <td className="p-2 flex gap-2 justify-center">
-                        <button
-                          onClick={() => handleEdit(e)}
-                          className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(e.expenseId)}
-                          className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Other Expenses Table */}
-          <div className="bg-white p-4 rounded-lg shadow-md overflow-auto max-h-[40vh]">
-            <h3 className="font-bold mb-2">Other Expenses</h3>
-            <table className="min-w-full table-auto">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2">ID</th>
-                  <th className="p-2">Date</th>
-                  <th className="p-2">Amount</th>
-                  <th className="p-2">Description</th>
-                  <th className="p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses
-                  .filter((e) => e.category === "other")
-                  .map((e) => (
-                    <tr key={e.expenseId} className="border-b">
-                      <td className="p-2">{e.expenseId}</td>
-                      <td className="p-2">{e.date?.substring(0, 10)}</td>
-                      <td className="p-2">Rs {Number(e.amount).toFixed(2)}</td>
-                      <td className="p-2">{e.description}</td>
-                      <td className="p-2 flex gap-2 justify-center">
-                        <button
-                          onClick={() => handleEdit(e)}
-                          className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(e.expenseId)}
-                          className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Purchases Table */}
-          <div className="bg-white p-4 rounded-lg shadow-md overflow-auto max-h-[40vh]">
-            <h3 className="font-bold mb-2">Purchase Records</h3>
-            <table className="min-w-full table-auto">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2">ID</th>
-                  <th className="p-2">Date</th>
-                  <th className="p-2">Material</th>
-                  <th className="p-2">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {purchases.map((p) => (
-                  <tr key={p._id} className="border-b">
-                    <td className="p-2">{p.purchaseId}</td>
-                    <td className="p-2">{p.date ? new Date(p.date).toLocaleDateString() : "N/A"}</td>
-                    <td className="p-2">{p.materialId?.name || "N/A"}</td>
-                    <td className="p-2">Rs {Number(p.totalCost || 0).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Payroll Table */}
-          <div className="bg-white p-4 rounded-lg shadow-md overflow-auto max-h-[40vh]">
-            <h3 className="font-bold mb-2">Payroll Records</h3>
-            <table className="min-w-full table-auto">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-2">Payroll ID</th>
-                  <th className="p-2">Employee</th>
-                  <th className="p-2">Net Salary</th>
-                  <th className="p-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payrolls.length ? (
-                  payrolls.map((p) => (
-                    <tr key={p._id} className="border-b">
-                      <td className="p-2">{p.payrollId}</td>
-                      <td className="p-2">{p.empName}</td>
-                      <td className="p-2">Rs {Number(p.netsalary || 0).toFixed(2)}</td>
-                      <td className="p-2">{p.date?.substring(0, 10) || "N/A"}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="text-center p-4">
-                      No payroll records.
+      <main className="grid gap-10">
+        {/* Transport Table */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Transport & Logistics
+          </h3>
+          <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead className="bg-[#005A54] text-[#FFEED6]">
+              <tr>
+                <th className="p-3 border">ID</th>
+                <th className="p-3 border">Date</th>
+                <th className="p-3 border">Amount</th>
+                <th className="p-3 border">Description</th>
+                <th className="p-3 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses
+                .filter((e) => e.category === "transport")
+                .map((e) => (
+                  <tr key={e.expenseId} className="hover:bg-gray-100 text-center">
+                    <td className="p-3 border">{e.expenseId}</td>
+                    <td className="p-3 border">{e.date?.substring(0, 10)}</td>
+                    <td className="p-3 border text-green-700 font-medium">
+                      Rs {Number(e.amount).toFixed(2)}
+                    </td>
+                    <td className="p-3 border">{e.description}</td>
+                    <td className="p-3 border flex justify-center gap-3">
+                      <button
+                        onClick={() => handleEdit(e)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(e.expenseId)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <FaTrash />
+                      </button>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* Pie Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
-          <h2 className="text-xl font-semibold mb-4 text-center">
-            Category-wise Expenses
-          </h2>
-          <p className="font-bold text-right mb-4">
-            Total Expenses: Rs {total.toFixed(2)}
-          </p>
-          <div className="max-w-md mx-auto">
-            <Pie data={pieData} />
-          </div>
-          <ul className="mt-2 text-sm text-center">
-            <li>Transport: {categoryPercent.transport}%</li>
-            <li>Other: {categoryPercent.other}%</li>
-            <li>Purchases: {categoryPercent.purchases}%</li>
-            <li>Payroll: {categoryPercent.payroll}%</li>
-          </ul>
+        {/* Other Expenses Table */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Other Expenses
+          </h3>
+          <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead className="bg-[#005A54] text-[#FFEED6]">
+              <tr>
+                <th className="p-3 border">ID</th>
+                <th className="p-3 border">Date</th>
+                <th className="p-3 border">Amount</th>
+                <th className="p-3 border">Description</th>
+                <th className="p-3 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses
+                .filter((e) => e.category === "other")
+                .map((e) => (
+                  <tr key={e.expenseId} className="hover:bg-gray-100 text-center">
+                    <td className="p-3 border">{e.expenseId}</td>
+                    <td className="p-3 border">{e.date?.substring(0, 10)}</td>
+                    <td className="p-3 border text-green-700 font-medium">
+                      Rs {Number(e.amount).toFixed(2)}
+                    </td>
+                    <td className="p-3 border">{e.description}</td>
+                    <td className="p-3 border flex justify-center gap-3">
+                      <button
+                        onClick={() => handleEdit(e)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(e.expenseId)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Purchases Table */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Purchase Records
+          </h3>
+          <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead className="bg-[#005A54] text-[#FFEED6]">
+              <tr>
+                <th className="p-3 border">ID</th>
+                <th className="p-3 border">Date</th>
+                <th className="p-3 border">Material</th>
+                <th className="p-3 border">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {purchases.map((p) => (
+                <tr key={p._id} className="hover:bg-gray-100 text-center">
+                  <td className="p-3 border">{p.purchaseId}</td>
+                  <td className="p-3 border">
+                    {p.date ? new Date(p.date).toLocaleDateString() : "N/A"}
+                  </td>
+                  <td className="p-3 border">{p.materialId?.name || "N/A"}</td>
+                  <td className="p-3 border text-green-700 font-medium">
+                    Rs {Number(p.totalCost || 0).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Payroll Table */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Payroll Records
+          </h3>
+          <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead className="bg-[#005A54] text-[#FFEED6]">
+              <tr>
+                <th className="p-3 border">Payroll ID</th>
+                <th className="p-3 border">Employee</th>
+                <th className="p-3 border">Net Salary</th>
+                <th className="p-3 border">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payrolls.length ? (
+                payrolls.map((p) => (
+                  <tr key={p._id} className="hover:bg-gray-100 text-center">
+                    <td className="p-3 border">{p.payrollId}</td>
+                    <td className="p-3 border">{p.empName}</td>
+                    <td className="p-3 border text-green-700 font-medium">
+                      Rs {Number(p.netsalary || 0).toFixed(2)}
+                    </td>
+                    <td className="p-3 border">
+                      {p.date?.substring(0, 10) || "N/A"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="p-4 text-gray-500 text-center">
+                    No payroll records.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </main>
+
+      {/* 🔹 Update Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-96">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              Update Expense
+            </h2>
+            <form onSubmit={handleUpdateSubmit} className="flex flex-col gap-3">
+              <label className="font-medium">Date</label>
+              <input
+                type="date"
+                name="date"
+                value={updateForm.date}
+                onChange={handleUpdateChange}
+                className="border rounded p-2"
+                required
+              />
+              <label className="font-medium">Category</label>
+              <select
+                name="category"
+                value={updateForm.category}
+                onChange={handleUpdateChange}
+                className="border rounded p-2"
+                required
+              >
+                <option value="transport">Transport</option>
+                <option value="other">Other</option>
+              </select>
+              <label className="font-medium">Amount</label>
+              <input
+                type="number"
+                name="amount"
+                value={updateForm.amount}
+                onChange={handleUpdateChange}
+                className="border rounded p-2"
+                required
+              />
+              <label className="font-medium">Description</label>
+              <textarea
+                name="description"
+                value={updateForm.description}
+                onChange={handleUpdateChange}
+                className="border rounded p-2"
+                required
+              />
+              <div className="flex justify-between mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowUpdateModal(false)}
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

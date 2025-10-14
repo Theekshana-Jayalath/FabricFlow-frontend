@@ -267,7 +267,7 @@ function AppContent() {
             element={<FinanceDashboard />} 
           />
           <Route 
-            path="finance/expenses" 
+            path="/admin/finance/expenses" 
             element={<Expenses/>} 
           />
           <Route 

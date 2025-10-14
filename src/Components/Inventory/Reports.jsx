@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "./Sidebar";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -188,9 +187,9 @@ function InventoryReports() {
   return (
     <div className="flex min-h-screen">
     
-      <div className="flex-1 p-8 bg-green-50 overflow-auto font-sans">
+      <div className="flex-1 overflow-y-auto font-sans">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-green-900">
+          <h1 className="text-2xl font-bold text-green-900">
             Monthly Inventory Report
           </h1>
           <div className="flex gap-2">

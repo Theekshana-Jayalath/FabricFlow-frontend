@@ -93,6 +93,7 @@ function OrderDetails() {
   }
 
   return (
+<<<<<<< Updated upstream
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <div>
@@ -110,6 +111,11 @@ function OrderDetails() {
         </button>
       </div>
 
+=======
+    <div className="flex min-h-screen">
+      
+       
+>>>>>>> Stashed changes
       {/* Main Content */}
       <div className="flex-1 p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Invoices</h1>
