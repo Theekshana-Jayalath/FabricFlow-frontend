@@ -23,11 +23,11 @@ import RouteTest from "./pages/RouteTest";
 import DriverDashboard from "./pages/DriverDashboard";
 
 // Order management components
-import OrderDetails from "./components/orderDetails";
-import AddNewOrder from "./components/addNewOrder";
-import UpdateOrder from "./components/updateOrder";
-import ProductCatalog from "./components/ProductCatalog";
-import ProductDetails from "./components/ProductDetails";
+import OrderDetails from "./Components/orderDetails";
+import AddNewOrder from "./Components/addNewOrder";
+import UpdateOrder from "./Components/updateOrder";
+import ProductCatalog from "./Components/ProductCatalog";
+import ProductDetails from "./Components/ProductDetails";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
