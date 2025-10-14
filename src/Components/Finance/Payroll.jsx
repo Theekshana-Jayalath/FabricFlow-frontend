@@ -3,7 +3,6 @@ import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-
 const API_URL = "http://localhost:5000/api/payrolls";
 
 const Payroll = () => {
@@ -25,6 +24,9 @@ const Payroll = () => {
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState(null);
 
+  // ===== Search state =====
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     fetchPayrolls();
   }, []);
@@ -38,7 +40,6 @@ const Payroll = () => {
     }
   };
 
-  /** --- Calculations --- */
   const calculateTotals = (data) => {
     const basic = Number(data.basicSalary) || 0;
     const working = Number(data.workingDays) || 1;
@@ -66,23 +67,6 @@ const Payroll = () => {
 
   const totals = calculateTotals(formData);
 
-  /** --- Monthly Payroll Chart Data --- */
-  const getMonthlyPayrollData = () => {
-    const monthlyTotals = {};
-    payrolls.forEach((p) => {
-      const date = new Date(p.date);
-      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      if (!monthlyTotals[monthYear]) {
-        monthlyTotals[monthYear] = { name: monthYear, netSalary: 0 };
-      }
-      monthlyTotals[monthYear].netSalary += Number(p.netsalary || 0);
-    });
-    return Object.values(monthlyTotals).sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const chartData = getMonthlyPayrollData();
-
-  /** --- Save or Update payroll --- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.empName || !formData.basicSalary) {
@@ -150,13 +134,9 @@ const Payroll = () => {
     setEditingId(null);
   };
 
-  /** --- Delete with confirmation --- */
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this payroll record?"
-    );
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Are you sure you want to delete this payroll record?"))
+      return;
     try {
       await axios.delete(`${API_URL}/${id}`);
       setPayrolls(payrolls.filter((p) => p._id !== id));
@@ -165,13 +145,9 @@ const Payroll = () => {
     }
   };
 
-  /** --- Edit with confirmation --- */
   const handleEdit = (p) => {
-    const confirmEdit = window.confirm(
-      `Do you want to update the payroll record for ${p.empName}?`
-    );
-    if (!confirmEdit) return;
-
+    if (!window.confirm(`Do you want to update payroll for ${p.empName}?`))
+      return;
     setFormData({
       empId: p.empId,
       empName: p.empName,
@@ -189,224 +165,217 @@ const Payroll = () => {
     setShowForm(true);
   };
 
- /** --- Download single payslip PDF --- */
-const downloadPDF = (p) => {
-  const doc = new jsPDF();
-  // ===== HEADER WITH GREEN BACKGROUND =====
-  doc.setFillColor(0, 77, 64); // Tailwind green-900 style
-  doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
+  const downloadPDF = (p) => {
+    const doc = new jsPDF();
+    doc.setFillColor(0, 77, 64);
+    doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("FABRIC FLOW", 14, 18);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Payroll Management System", 14, 25);
 
-  // Circle Logo
-  doc.setFillColor(255, 255, 255);
-  doc.circle(15, 15, 8, "F");
-  doc.setTextColor(0, 77, 64);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("FF", 15, 18, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    const infoY = 40;
+    const infoSpacing = 6;
+    doc.text(`Employee: ${p.empName}`, 14, infoY);
+    doc.text(`Payroll ID: ${p.payrollId}`, 14, infoY + infoSpacing);
+    doc.text(`Employee ID: ${p.empId}`, 14, infoY + infoSpacing * 2);
+    doc.text(`Payroll Date: ${p.date}`, 14, infoY + infoSpacing * 3);
 
-  // FABRIC FLOW Title
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("FABRIC FLOW", 32, 15);
-
-  // Subtitle (Changed to Report Summary)
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text("Management System", 32, 22);
-
-  // --- Payroll info ---
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(12);
-  const today = new Date();
-  const month = today.toLocaleString("default", { month: "long" });
-  const year = today.getFullYear();
-  doc.text(`Payroll Date: ${p.date}`, 14, 35);
-  doc.text(`Download Month: ${month} ${year}`, 14, 40);
-  doc.text(`Employee ID: ${p.empId}`, 14, 45);
-  doc.text(`Payroll ID: ${p.payrollId}`, 14, 50);
-
-  // --- Basic Salary Table ---
-  autoTable(doc, {
-    startY: 60,
-    head: [["Item", "Amount (Rs)"]],
-    body: [
-      ["Basic Salary", p.basicSalary.toFixed(2)],
-      ["Overtime Amount", p.otAmount.toFixed(2)],
-      ["No Pay Deduction", p.noPay.toFixed(2)],
-      ["EPF Employee (8%)", p.epfEmployee.toFixed(2)],
-    ],
-    theme: "grid",
-  });
-
-  // --- Allowances Table ---
-  if (p.allowances && p.allowances.length) {
     autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 10,
-      head: [["Allowance", "Amount (Rs)"]],
-      body: p.allowances.map((a) => [a.title, a.amount]),
+      startY: infoY + infoSpacing * 5,
+      head: [["Item", "Amount (Rs)"]],
+      body: [
+        ["Basic Salary", p.basicSalary.toFixed(2)],
+        ["Overtime", p.otAmount.toFixed(2)],
+        ["No Pay Deduction", p.noPay.toFixed(2)],
+        ["EPF Employee (8%)", p.epfEmployee.toFixed(2)],
+        ["Net Salary", p.netsalary.toFixed(2)],
+      ],
       theme: "grid",
+      headStyles: { fillColor: [0, 77, 64], textColor: 255 },
+      alternateRowStyles: { fillColor: [255, 255, 255] },
+      styles: { fontSize: 11, cellPadding: 4 },
     });
-  }
 
-  // --- Deductions Table ---
-  if (p.deductions && p.deductions.length) {
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 10,
-      head: [["Deduction", "Amount (Rs)"]],
-      body: p.deductions.map((d) => [d.title, d.amount]),
-      theme: "grid",
-    });
-  }
+    if (p.allowances && p.allowances.length) {
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 6,
+        head: [["Allowance", "Amount (Rs)"]],
+        body: p.allowances.map((a) => [a.title, a.amount.toFixed(2)]),
+        theme: "grid",
+        headStyles: { fillColor: [0, 77, 64], textColor: 255 },
+        styles: { fontSize: 11, cellPadding: 4 },
+      });
+    }
 
-  // --- Net Salary ---
-  const netY = doc.lastAutoTable.finalY + 12;
-  doc.setFontSize(14);
-  doc.setTextColor(255, 255, 255);
-  doc.setFillColor(0, 90, 84); // same as header
-  doc.rect(0, netY - 8, 210, 10, "F");
-  doc.text(`Net Salary: Rs ${p.netsalary.toFixed(2)}`, 105, netY, { align: "center" });
+    if (p.deductions && p.deductions.length) {
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 6,
+        head: [["Deduction", "Amount (Rs)"]],
+        body: p.deductions.map((d) => [d.title, d.amount.toFixed(2)]),
+        theme: "grid",
+        headStyles: { fillColor: [0, 77, 64], textColor: 255 },
+        styles: { fontSize: 11, cellPadding: 4 },
+      });
+    }
 
-  doc.save(`${p.empName}_Payslip.pdf`);
-};
+    const netY = doc.lastAutoTable.finalY + 20;
+    doc.setFillColor(0, 77, 64);
+    const barWidth = 150;
+    const pageWidth = doc.internal.pageSize.width;
+    const barX = (pageWidth - barWidth) / 2;
+    doc.rect(barX, netY - 6, barWidth, 10, "F");
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Net Salary: Rs ${p.netsalary.toFixed(2)}`, pageWidth / 2, netY, { align: "center" });
 
-  /** --- Summary Chart Data --- */
-  const totalSalary = payrolls.reduce((s, p) => s + (p.basicSalary || 0), 0);
-  const totalNet = payrolls.reduce((s, p) => s + (p.netsalary || 0), 0);
-  const totalDeduct = payrolls.reduce(
-    (s, p) =>
-      s + (p.deductions || []).reduce((a, b) => a + (Number(b.amount) || 0), 0),
-    0
+    const pageHeight = doc.internal.pageSize.getHeight();
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(120, 120, 120);
+    doc.text(
+      "Fabric Flow Management System | Confidential Document",
+      doc.internal.pageSize.getWidth() / 2,
+      pageHeight - 10,
+      { align: "center" }
+    );
+
+    doc.save(`${p.empName}_Payslip.pdf`);
+  };
+
+  // ===== Filter payrolls by search term =====
+  const displayedPayrolls = payrolls.filter((p) =>
+    p.empName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const summaryChartData = [
-    { name: "Basic Salary", amount: totalSalary },
-    { name: "Deductions", amount: totalDeduct },
-    { name: "Net Salary", amount: totalNet },
-  ];
-
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <div>
+    <div className="p-6">
+      {/* Buttons */}
+      <div className="flex justify-between items-center mb-6">
         <button
-          className="w-full mb-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
           onClick={() => setShowForm(true)}
+          className="px-4 py-2 bg-[#005654] text-white rounded hover:bg-[#00756D]"
         >
-          ➕ Add Payroll
+          Add Payroll
         </button>
-        <button
-          className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded"
-          onClick={() => setShowForm(false)}
+
+        <input
+          type="text"
+          placeholder="Search by Employee Name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="px-4 py-2 rounded-lg border border-green-300 w-72 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 text-green-900"
+        />
+      </div>
+
+
+      {/* ===== Add/Update Payroll Form (full original code) ===== */}
+      {showForm && (
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded shadow mb-6 space-y-4"
         >
-          📊 Payroll Summary
-        </button>
-     
-</div>
-      {/* Main content */}
-      <main className="flex-1 p-6">
-        <h2 className="text-2xl font-semibold mb-4">Payroll</h2>
+          {error && (
+            <p className="text-red-600 font-semibold text-sm">{error}</p>
+          )}
 
-        {/* Payroll Form */}
-        {showForm && (
-          <form
-            className="bg-white p-6 rounded shadow-md max-w-3xl mb-6"
-            onSubmit={handleSubmit}
-          >
-            {error && <p className="text-red-500 mb-4">{error}</p>}
-
-            {/* Employee name & salary */}
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold">Employee Name</label>
-                <input
-                  type="text"
-                  value={formData.empName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, empName: e.target.value })
-                  }
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block font-semibold">Basic Salary</label>
-                <input
-                  type="number"
-                  value={formData.basicSalary}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      basicSalary: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
+          {/* Employee Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col">
+              <label className="font-medium mb-1">Employee Name</label>
+              <input
+                type="text"
+                value={formData.empName}
+                onChange={(e) =>
+                  setFormData({ ...formData, empName: e.target.value })
+                }
+                required
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
             </div>
-
-            {/* Other fields */}
-            <div className="mb-4 grid grid-cols-4 gap-4">
-              <div>
-                <label className="font-semibold">Working Days</label>
-                <input
-                  type="number"
-                  value={formData.workingDays}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      workingDays: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="font-semibold">Absent Days</label>
-                <input
-                  type="number"
-                  value={formData.absentDays}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      absentDays: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="font-semibold">Overtime Hours</label>
-                <input
-                  type="number"
-                  value={formData.overtimeHours}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      overtimeHours: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="font-semibold">OT Rate</label>
-                <input
-                  type="number"
-                  value={formData.otRate}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      otRate: Number(e.target.value),
-                    })
-                  }
-                  className="w-full p-2 border rounded"
-                />
-              </div>
+            <div className="flex flex-col">
+              <label className="font-medium mb-1">Basic Salary</label>
+              <input
+                type="number"
+                value={formData.basicSalary}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    basicSalary: Number(e.target.value),
+                  })
+                }
+                required
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
             </div>
+          </div>
 
-            {/* Allowances */}
-            <h3 className="font-semibold mt-4 mb-2">Allowances</h3>
+          {/* Working/Absent/OT */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex flex-col">
+              <label className="font-medium mb-1">Working Days</label>
+              <input
+                type="number"
+                value={formData.workingDays}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    workingDays: Number(e.target.value),
+                  })
+                }
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="font-medium mb-1">Absent Days</label>
+              <input
+                type="number"
+                value={formData.absentDays}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    absentDays: Number(e.target.value),
+                  })
+                }
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="font-medium mb-1">Overtime Hours</label>
+              <input
+                type="number"
+                value={formData.overtimeHours}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    overtimeHours: Number(e.target.value),
+                  })
+                }
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="font-medium mb-1">OT Rate</label>
+              <input
+                type="number"
+                value={formData.otRate}
+                onChange={(e) =>
+                  setFormData({ ...formData, otRate: Number(e.target.value) })
+                }
+                className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
+          </div>
+
+          {/* Allowances */}
+          <div>
+            <h3 className="font-semibold mb-2">Allowances</h3>
             {formData.allowances.map((a, i) => (
               <div key={i} className="flex gap-2 mb-2">
                 <input
@@ -418,7 +387,7 @@ const downloadPDF = (p) => {
                     arr[i].title = e.target.value;
                     setFormData({ ...formData, allowances: arr });
                   }}
-                  className="p-2 border rounded flex-1"
+                  className="border border-gray-300 rounded px-2 py-1 flex-1 focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
                 <input
                   type="number"
@@ -429,11 +398,10 @@ const downloadPDF = (p) => {
                     arr[i].amount = Number(e.target.value);
                     setFormData({ ...formData, allowances: arr });
                   }}
-                  className="p-2 border rounded flex-1"
+                  className="border border-gray-300 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
                 <button
                   type="button"
-                  className="bg-red-500 text-white px-2 rounded"
                   onClick={() =>
                     setFormData({
                       ...formData,
@@ -442,6 +410,7 @@ const downloadPDF = (p) => {
                       ),
                     })
                   }
+                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                 >
                   Remove
                 </button>
@@ -449,19 +418,21 @@ const downloadPDF = (p) => {
             ))}
             <button
               type="button"
-              className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
               onClick={() =>
                 setFormData({
                   ...formData,
                   allowances: [...formData.allowances, { title: "", amount: 0 }],
                 })
               }
+              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              + Add Allowance
+              Add Allowance
             </button>
+          </div>
 
-            {/* Deductions */}
-            <h3 className="font-semibold mt-4 mb-2">Deductions</h3>
+          {/* Deductions */}
+          <div>
+            <h3 className="font-semibold mb-2">Deductions</h3>
             {formData.deductions.map((d, i) => (
               <div key={i} className="flex gap-2 mb-2">
                 <input
@@ -473,7 +444,7 @@ const downloadPDF = (p) => {
                     arr[i].title = e.target.value;
                     setFormData({ ...formData, deductions: arr });
                   }}
-                  className="p-2 border rounded flex-1"
+                  className="border border-gray-300 rounded px-2 py-1 flex-1 focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
                 <input
                   type="number"
@@ -484,11 +455,10 @@ const downloadPDF = (p) => {
                     arr[i].amount = Number(e.target.value);
                     setFormData({ ...formData, deductions: arr });
                   }}
-                  className="p-2 border rounded flex-1"
+                  className="border border-gray-300 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
                 <button
                   type="button"
-                  className="bg-red-500 text-white px-2 rounded"
                   onClick={() =>
                     setFormData({
                       ...formData,
@@ -497,6 +467,7 @@ const downloadPDF = (p) => {
                       ),
                     })
                   }
+                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                 >
                   Remove
                 </button>
@@ -504,98 +475,94 @@ const downloadPDF = (p) => {
             ))}
             <button
               type="button"
-              className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
               onClick={() =>
                 setFormData({
                   ...formData,
                   deductions: [...formData.deductions, { title: "", amount: 0 }],
                 })
               }
+              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              + Add Deduction
+              Add Deduction
             </button>
+          </div>
 
-            {/* Totals */}
-            <div className="mb-4 bg-gray-100 p-4 rounded">
-              <p>Overtime Amount: Rs {totals.otAmount.toFixed(2)}</p>
-              <p>No Pay Deduction: Rs {totals.noPay.toFixed(2)}</p>
-              <p>EPF Employee: Rs {totals.epfEmployee.toFixed(2)}</p>
-              <p className="font-semibold">
-                Net Salary: Rs {totals.netSalary.toFixed(2)}
-              </p>
-            </div>
-
+          <div className="flex gap-3 mt-4">
             <button
               type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded"
+              className="px-4 py-2 bg-[#005654] text-white rounded hover:bg-[#00756D]"
             >
               {editingId ? "Update Payroll" : "Save Payroll"}
             </button>
-          </form>
-        )}
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
 
-        {/* Payroll Records Table */}
-        <div className="bg-white p-6 rounded shadow-md mb-6 overflow-auto">
-          <h3 className="text-xl font-semibold mb-4">Payroll Records</h3>
-          <table className="min-w-full table-auto border-collapse">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border px-2 py-1">Employee</th>
-                <th className="border px-2 py-1">Basic Salary</th>
-                <th className="border px-2 py-1">Overtime</th>
-                <th className="border px-2 py-1">No Pay</th>
-                <th className="border px-2 py-1">EPF</th>
-                <th className="border px-2 py-1">Net Salary</th>
-                <th className="border px-2 py-1">Date</th>
-                <th className="border px-2 py-1">Actions</th>
+      {/* ===== Payroll Table ===== */}
+      <div className="overflow-x-auto">
+        <h3 className="text-lg font-semibold mb-2">Payroll Records</h3>
+        <table className="min-w-full bg-white border border-gray-200 rounded">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="py-2 px-4 border-b">Employee</th>
+              <th className="py-2 px-4 border-b">Basic Salary</th>
+              <th className="py-2 px-4 border-b">Overtime</th>
+              <th className="py-2 px-4 border-b">No Pay</th>
+              <th className="py-2 px-4 border-b">EPF</th>
+              <th className="py-2 px-4 border-b">Net Salary</th>
+              <th className="py-2 px-4 border-b">Date</th>
+              <th className="py-2 px-4 border-b">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayedPayrolls.map((p) => (
+              <tr key={p._id} className="hover:bg-gray-50">
+                <td className="py-2 px-4 border-b">{p.empName}</td>
+                <td className="py-2 px-4 border-b">Rs {p.basicSalary}</td>
+                <td className="py-2 px-4 border-b">Rs {p.otAmount.toFixed(2)}</td>
+                <td className="py-2 px-4 border-b">Rs {p.noPay.toFixed(2)}</td>
+                <td className="py-2 px-4 border-b">Rs {p.epfEmployee.toFixed(2)}</td>
+                <td className="py-2 px-4 border-b">Rs {p.netsalary.toFixed(2)}</td>
+                <td className="py-2 px-4 border-b">{p.date}</td>
+                <td className="py-2 px-4 border-b flex gap-2">
+                  <button
+                    onClick={() => handleEdit(p)}
+                    className="text-yellow-600 hover:text-yellow-800 border border-yellow-600 hover:border-yellow-800 px-2 py-1 rounded text-sm font-medium transition"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => handleDelete(p._id)}
+                    className="text-red-600 hover:text-red-800 border border-red-600 hover:border-red-800 px-2 py-1 rounded text-sm font-medium transition"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => downloadPDF(p)}
+                    className="text-blue-600 hover:text-blue-800 border border-blue-600 hover:border-blue-800 px-2 py-1 rounded text-sm font-medium transition"
+                  >
+                    Download
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {payrolls.map((p) => (
-                <tr key={p._id}>
-                  <td className="border px-2 py-1">{p.empName}</td>
-                  <td className="border px-2 py-1">Rs {p.basicSalary}</td>
-                  <td className="border px-2 py-1">Rs {p.otAmount.toFixed(2)}</td>
-                  <td className="border px-2 py-1">Rs {p.noPay.toFixed(2)}</td>
-                  <td className="border px-2 py-1">Rs {p.epfEmployee.toFixed(2)}</td>
-                  <td className="border px-2 py-1">Rs {p.netsalary.toFixed(2)}</td>
-                  <td className="border px-2 py-1">{p.date}</td>
-                  <td className="border px-2 py-1 flex flex-wrap gap-2">
-                    <button
-                      className="bg-yellow-500 text-white px-2 rounded"
-                      onClick={() => handleEdit(p)}
-                    >
-                      Update
-                    </button>
-                    <button
-                      className="bg-red-500 text-white px-2 rounded"
-                      onClick={() => handleDelete(p._id)}
-                    >
-                      Delete
-                    </button>
-                    <button
-                      className="bg-blue-600 text-white px-2 rounded"
-                      onClick={() => downloadPDF(p)}
-                    >
-                      Download 
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {payrolls.length === 0 && (
-                <tr>
-                  <td colSpan="8" className="text-center py-4">
-                    No payroll records found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Summary Chart */}
-        
-      </main>
+            ))}
+            {displayedPayrolls.length === 0 && (
+              <tr>
+                <td colSpan="8" className="text-center py-4">
+                  No payroll records found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
