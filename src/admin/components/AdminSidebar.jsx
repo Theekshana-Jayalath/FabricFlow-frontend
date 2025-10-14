@@ -51,7 +51,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       subItems: [
         { text: 'User Management', path: '/admin/users', icon: <People /> },
         { text: 'Employee Management', path: '/admin/employees', icon: <People /> },
-        { text: 'System Settings', path: '/admin/settings', icon: <AdminPanelSettings /> }
+        { text: 'System Settings', path: '/settings', icon: <AdminPanelSettings /> }
       ]
     },
     {
@@ -103,7 +103,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
         { text: 'Vehicle Management', path: '/admin/sales/vehicles', icon: <LocalShipping /> },
         { text: 'Delivery Management', path: '/admin/delivery/management', icon: <LocalShipping /> },
         { text: 'All Delivery Orders', path: '/admin/orders/all-delivery-orders', icon: <Assignment /> },
-        //{ text: 'Asign Orders', path: '/admin/sales/asignOrders', icon: <People /> },
+        { text: 'Asigned Orders', path: '/admin/sales/asignOrders', icon: <People /> },
         
       ]
     }

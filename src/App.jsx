@@ -23,11 +23,11 @@ import RouteTest from "./pages/RouteTest";
 import DriverDashboard from "./pages/DriverDashboard";
 
 // Order management components
-import OrderDetails from "./components/orderDetails";
-import AddNewOrder from "./components/addNewOrder";
-import UpdateOrder from "./components/updateOrder";
-import ProductCatalog from "./components/ProductCatalog";
-import ProductDetails from "./components/ProductDetails";
+import OrderDetails from "./Components/orderDetails";
+import AddNewOrder from "./Components/addNewOrder";
+import UpdateOrder from "./Components/updateOrder";
+import ProductCatalog from "./Components/ProductCatalog";
+import ProductDetails from "./Components/ProductDetails";
 
 // Admin Components
 import AdminLayout from "./admin/components/AdminLayout";
@@ -41,6 +41,7 @@ import VehicleManagement from "./admin/pages/VehicleManagement";
 import DeliveryManagement from "./admin/pages/DeliveryManagement";
 import AllOrders from "./admin/pages/AllOrders";
 import AddDriver from "./admin/pages/AddDriver";
+import AssignedOrders from "./admin/pages/AssignedOrders";
 import InventoryDashboard from "./Components/Inventory/Dashboard";
 import Materials from "./Components/Inventory/Materials";
 import Purchases from "./Components/Inventory/Purchase";
@@ -54,6 +55,7 @@ import FinanceReport from "./Components/Finance/Report";
 import AddExpenses from "./Components/Finance/addExpenses";
 import FinanceAddExpenses from "./Components/Finance/addExpenses";
 import UpdateExpense from "./Components/Finance/updateExpenses";
+import Reports from "./admin/pages/Reports";
 
 
 function App() {
@@ -205,6 +207,10 @@ function AppContent() {
             element={<EmployeeTable />} 
           />
           <Route 
+            path="reports" 
+            element={<Reports />} 
+          />
+          <Route 
             path="charts" 
             element={<Charts />} 
           />
@@ -235,6 +241,10 @@ function AppContent() {
           <Route 
             path="orders/all-delivery-orders" 
             element={<AllOrders />} 
+          />
+          <Route 
+            path="sales/asignOrders" 
+            element={<AssignedOrders />} 
           />
 
           <Route 
