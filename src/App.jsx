@@ -41,6 +41,7 @@ import VehicleManagement from "./admin/pages/VehicleManagement";
 import DeliveryManagement from "./admin/pages/DeliveryManagement";
 import AllOrders from "./admin/pages/AllOrders";
 import AddDriver from "./admin/pages/AddDriver";
+import AssignedOrders from "./admin/pages/AssignedOrders";
 import InventoryDashboard from "./Components/Inventory/Dashboard";
 import Materials from "./Components/Inventory/Materials";
 import Purchases from "./Components/Inventory/Purchase";
@@ -235,6 +236,10 @@ function AppContent() {
           <Route 
             path="orders/all-delivery-orders" 
             element={<AllOrders />} 
+          />
+          <Route 
+            path="sales/asignOrders" 
+            element={<AssignedOrders />} 
           />
 
           <Route 
