@@ -218,12 +218,13 @@ const AllOrders = () => {
     setShowOrderModal(true);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+ const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-LK', {
+    style: 'currency',
+    currency: 'LKR'
+  }).format(amount);
+};
+
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
