@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient and rounded corners -->
+  <rect width="64" height="64" rx="12" fill="url(#gradient)"/>
+  
+  <!-- FF Text with better positioning for larger size -->
+  <text x="32" y="42" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="26" fill="white">FF</text>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#005A54;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF6869;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
