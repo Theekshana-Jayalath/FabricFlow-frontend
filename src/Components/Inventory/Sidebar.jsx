@@ -1,4 +1,4 @@
-// Sidebar.jsx
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaBoxes, FaUserFriends, FaChartBar, FaHome, FaShoppingCart } from "react-icons/fa";

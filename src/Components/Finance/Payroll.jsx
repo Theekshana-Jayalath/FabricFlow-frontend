@@ -255,10 +255,6 @@ const Payroll = () => {
   );
 
   return (
-<<<<<<< Updated upstream
-    <div className="flex min-h-screen bg-gray-100">
-      <div>
-=======
     <div className="p-6">
       {/* Buttons */}
       <div className="flex justify-between items-center mb-6">
