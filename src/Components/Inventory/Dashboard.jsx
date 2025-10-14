@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "./Sidebar";
 import {
   LineChart,
   Line,
@@ -62,18 +61,18 @@ function InventoryDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen font-sans bg-green-50">
+    <div className="flex min-h-screen font-sans ">
 
-      <main className="flex-1 p-8 overflow-auto">
-        <h1 className="text-3xl font-bold text-green-900 mb-8">Dashboard</h1>
+      <main className="flex-1 overflow-y-auto font-sans">
+        <h1 className="text-2xl font-bold text-green-900 mb-8">Dashboard</h1>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-400 text-white p-6 rounded-xl shadow-lg transform transition hover:scale-105">
+          <div className="bg-gradient-to-br bg-[#1804CC] text-white p-6 rounded-xl shadow-lg transform transition hover:scale-105">
             <h2 className="text-lg font-semibold mb-2">Total Materials</h2>
             <p className="text-2xl font-bold">{materials.length}</p>
           </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-400 text-white p-6 rounded-xl shadow-lg transform transition hover:scale-105">
+          <div className="bg-gradient-to-br bg-[#005A54] text-white p-6 rounded-xl shadow-lg transform transition hover:scale-105">
             <h2 className="text-lg font-semibold mb-2">Total Suppliers</h2>
             <p className="text-2xl font-bold">{suppliers.length}</p>
           </div>
@@ -87,7 +86,7 @@ function InventoryDashboard() {
             <h2 className="text-lg font-semibold mb-2">Low Stock</h2>
             <p className="text-2xl font-bold">{lowStockMaterials.length}</p>
           </div>
-          <div className="bg-gradient-to-br from-purple-500 to-purple-400 text-white p-6 rounded-xl shadow-lg transform transition hover:scale-105">
+          <div className="bg-gradient-to-br bg-[#610F95] text-white p-6 rounded-xl shadow-lg transform transition hover:scale-105">
             <h2 className="text-lg font-semibold mb-2">Inventory Value</h2>
             <p className="text-2xl font-bold">
               Rs.

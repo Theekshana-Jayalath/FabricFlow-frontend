@@ -3,7 +3,6 @@ import { MdDelete } from "react-icons/md";
 import { FaPlus } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "./Sidebar";
 
 function Materials() {
   const [materials, setMaterials] = useState([]);
@@ -55,6 +54,7 @@ function Materials() {
     fetchSuppliers();
   }, []);
 
+  //validation
   const handleOpenAddModal = () => {
     let nextId = 1;
     if (materials.length > 0) {
@@ -189,20 +189,20 @@ function Materials() {
 
   return (
     <div className="flex h-screen">
-      <div className="flex-1 p-8 bg-green-50 overflow-y-auto font-sans">
+      <div className="flex-1 overflow-y-auto font-sans">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-green-900">Material List</h1>
           <input
             type="text"
             placeholder="Search materials..."
-            className="px-4 py-2 border rounded-lg w-72 text-green-900 shadow-sm"
+            className="px-4 py-2 rounded-lg border border-green-300 w-72 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 text-green-900"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <button
-          className="fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center"
+          className="fixed bottom-8 right-8 bg-[#005A54]  text-white p-4 rounded-full shadow-lg flex items-center justify-center hover:bg-[#00756D]"
           onClick={handleOpenAddModal}
         >
           <FaPlus size={20} />
@@ -220,11 +220,11 @@ function Materials() {
             <tbody>
               {filteredMaterials.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center p-6 text-green-700">No materials found</td>
+                  <td colSpan={8} className="text-center p-6 text-[#005A54] ">No materials found</td>
                 </tr>
               )}
               {filteredMaterials.map(m => (
-                <tr key={m._id} className={`${(m.quantity || 0) <= (m.reOrderLevel || 0) ? "bg-red-100 text-red-700" : "bg-white text-green-900"}`}>
+                <tr key={m._id} className={`${(m.quantity || 0) <= (m.reOrderLevel || 0) ? "bg-red-100 text-red-700 " : "bg-white text-green-900 :"}`}>
                   <td className="p-3 bg-white rounded">{m.materialId}</td>
                   <td className="p-3 bg-white rounded">{m.name}</td>
                   <td className="p-3 bg-white rounded">{m.unit}</td>
@@ -233,7 +233,7 @@ function Materials() {
                   <td className="p-3 bg-white rounded">{m.quantity}</td>
                   <td className="p-3 bg-white rounded">{m.supplierId?.name || "N/A"}</td>
                   <td className="p-3 bg-white rounded flex gap-2">
-                    <button className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700" onClick={() => openEdit(m)}>
+                    <button className="bg-[#005A54] text-white px-2 py-1 rounded hover:bg-[#00756D]" onClick={() => openEdit(m)}>
                       <CiEdit size={18} />
                     </button>
                     <button className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-500" onClick={() => handleDelete(m._id)}>
@@ -294,7 +294,7 @@ function Materials() {
               </div>
               <div className="flex justify-end gap-3">
                 <button className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={()=>setShowAddModal(false)}>Cancel</button>
-                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleAddMaterial}>Add Material</button>
+                <button className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#00756D]" onClick={handleAddMaterial}>Add Material</button>
               </div>
             </div>
           </div>
@@ -349,7 +349,7 @@ function Materials() {
               </div>
               <div className="flex justify-end gap-3">
                 <button className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={()=>setShowEditModal(false)}>Cancel</button>
-                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleUpdateMaterial}>Update Material</button>
+                <button className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#00756D]" onClick={handleUpdateMaterial}>Update Material</button>
               </div>
             </div>
           </div>
