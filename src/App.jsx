@@ -54,6 +54,7 @@ import FinanceReport from "./Components/Finance/Report";
 import AddExpenses from "./Components/Finance/addExpenses";
 import FinanceAddExpenses from "./Components/Finance/addExpenses";
 import UpdateExpense from "./Components/Finance/updateExpenses";
+import Reports from "./admin/pages/Reports";
 
 
 function App() {
@@ -203,6 +204,10 @@ function AppContent() {
           <Route 
             path="employees" 
             element={<EmployeeTable />} 
+          />
+          <Route 
+            path="reports" 
+            element={<Reports />} 
           />
           <Route 
             path="charts" 

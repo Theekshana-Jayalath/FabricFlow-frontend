@@ -51,7 +51,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       subItems: [
         { text: 'User Management', path: '/admin/users', icon: <People /> },
         { text: 'Employee Management', path: '/admin/employees', icon: <People /> },
-        { text: 'System Settings', path: '/admin/settings', icon: <AdminPanelSettings /> }
+        { text: 'System Settings', path: '/settings', icon: <AdminPanelSettings /> }
       ]
     },
     {
