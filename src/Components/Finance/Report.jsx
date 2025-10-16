@@ -4,6 +4,7 @@ import axios from "axios";
 import { Bar } from "react-chartjs-2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import LogoImage from '../../images/logo.png';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -102,13 +103,20 @@ const FinanceReport = () => {
   doc.setFillColor(0, 77, 64); // Tailwind green-900 style
   doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
 
-  // Circle Logo
-  doc.setFillColor(255, 255, 255);
-  doc.circle(15, 15, 8, "F");
-  doc.setTextColor(0, 77, 64);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("FF", 15, 18, { align: "center" });
+  // Add FabricFlow Logo Image
+  try {
+    // Use your actual logo image
+    doc.addImage(LogoImage, 'PNG', 8, 7, 15, 15);
+  } catch (error) {
+    console.log('Logo image failed to load, using fallback');
+    // Circle Logo fallback
+    doc.setFillColor(255, 255, 255);
+    doc.circle(15, 15, 8, "F");
+    doc.setTextColor(0, 77, 64);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("FF", 15, 18, { align: "center" });
+  }
 
   // FABRIC FLOW Title
   doc.setTextColor(255, 255, 255);

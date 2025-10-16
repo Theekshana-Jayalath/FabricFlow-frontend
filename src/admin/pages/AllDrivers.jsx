@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import axios from 'axios';
+import LogoImage from '../../images/logo.png';
 
 const AllDrivers = () => {
   const [drivers, setDrivers] = useState([]);
@@ -172,12 +173,19 @@ const AllDrivers = () => {
       doc.setFillColor(0, 90, 84); // #005A54
       doc.rect(0, 0, pageWidth, 100, 'F');
       
-      // Company Logo Area (placeholder)
-      doc.setFillColor(255, 255, 255);
-      doc.circle(60, 50, 25, 'F');
-      doc.setFontSize(12);
-      doc.setTextColor(0, 90, 84);
-      doc.text('FF', 55, 55);
+      // Add FabricFlow Logo Image
+      try {
+        // Use your actual logo image
+        doc.addImage(LogoImage, 'PNG', 30, 20, 60, 60);
+      } catch (error) {
+        console.log('Logo image failed to load, using fallback');
+        // Company Logo Area (fallback)
+        doc.setFillColor(255, 255, 255);
+        doc.circle(60, 50, 25, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(0, 90, 84);
+        doc.text('FF', 55, 55);
+      }
       
       // Company Name and Title
       doc.setFontSize(28);

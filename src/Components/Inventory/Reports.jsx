@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import LogoImage from '../../images/logo.png';
 
 function InventoryReports() {
   const [purchases, setPurchases] = useState([]);
@@ -61,13 +62,20 @@ function InventoryReports() {
     doc.setFillColor(0, 77, 64); // Dark green background
     doc.rect(0, 0, doc.internal.pageSize.width, 30, "F");
 
-    // White circle logo
-    doc.setFillColor(255, 255, 255);
-    doc.circle(15, 15, 8, "F"); // x=15, y=15, radius=8
-    doc.setTextColor(0, 77, 64);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("FF", 15, 18, { align: "center" });
+    // Add FabricFlow Logo Image
+    try {
+      // Use your actual logo image
+      doc.addImage(LogoImage, 'PNG', 8, 7, 15, 15);
+    } catch (error) {
+      console.log('Logo image failed to load, using fallback');
+      // White circle logo fallback
+      doc.setFillColor(255, 255, 255);
+      doc.circle(15, 15, 8, "F"); // x=15, y=15, radius=8
+      doc.setTextColor(0, 77, 64);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text("FF", 15, 18, { align: "center" });
+    }
 
     // Main Title
     doc.setTextColor(255, 255, 255);

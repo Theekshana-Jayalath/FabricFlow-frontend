@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import LogoImage from '../../images/logo.png';
 
 const DeliveryManagement = () => {
   const [deliveredOrders, setDeliveredOrders] = useState([]);
@@ -82,12 +83,19 @@ const DeliveryManagement = () => {
       doc.setFillColor(0, 90, 84);
       doc.rect(0, 0, pageWidth, 100, 'F');
 
-      // Logo placeholder
-      doc.setFillColor(255, 255, 255);
-      doc.circle(60, 50, 25, 'F');
-      doc.setFontSize(12);
-      doc.setTextColor(0, 90, 84);
-      doc.text('FF', 55, 55);
+      // Add FabricFlow Logo Image
+      try {
+        // Use your actual logo image
+        doc.addImage(LogoImage, 'PNG', 30, 20, 60, 60);
+      } catch (error) {
+        console.log('Logo image failed to load, using fallback');
+        // Logo placeholder
+        doc.setFillColor(255, 255, 255);
+        doc.circle(60, 50, 25, 'F');
+        doc.setFontSize(12);
+        doc.setTextColor(0, 90, 84);
+        doc.text('FF', 55, 55);
+      }
 
       // Title
       doc.setFontSize(28);

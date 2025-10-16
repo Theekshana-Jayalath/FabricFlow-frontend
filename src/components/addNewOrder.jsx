@@ -5,6 +5,7 @@ import axios from "axios";
 import { FaSave, FaArrowLeft, FaPlus, FaMinus, FaShoppingCart, FaDownload, FaFilePdf, FaUser, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import LogoImage from '../images/logo.png';
 
 const URL = "http://localhost:5000/api/orders";
 
@@ -424,13 +425,20 @@ function AddNewOrder() {
       doc.setFillColor(0, 90, 84); // Dark teal color matching the report
       doc.rect(0, 0, 210, 25, 'F');
 
-      // FF Logo circle
-      doc.setFillColor(255, 255, 255);
-      doc.circle(15, 12.5, 5, 'F');
-      doc.setFillColor(0, 90, 84);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text("FF", 12.5, 15);
+      // Add FabricFlow Logo Image
+      try {
+        // Use your actual logo image
+        doc.addImage(LogoImage, 'PNG', 8, 7, 15, 15);
+      } catch (error) {
+        console.log('Logo image failed to load, using fallback');
+        // FF Logo circle fallback
+        doc.setFillColor(255, 255, 255);
+        doc.circle(15, 12.5, 5, 'F');
+        doc.setFillColor(0, 90, 84);
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("FF", 12.5, 15);
+      }
 
       // Company name and subtitle
       doc.setFontSize(28);

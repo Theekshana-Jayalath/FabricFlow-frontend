@@ -46,6 +46,7 @@ import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import EmployeeViewEditModal from './EmployeeViewEditModal';
 import EmployeeModal from './EmployeeModal';
+import LogoImage from '../../images/logo.png';
 
 const EmployeeTable = () => {
   const [employees, setEmployees] = useState([]);
@@ -257,12 +258,20 @@ const EmployeeTable = () => {
       doc.setFillColor(0, 90, 84); // #005A54
       doc.rect(0, 0, pageWidth, 100, 'F');
       
-      // Company Logo Area (placeholder)
-      doc.setFillColor(255, 255, 255);
-      doc.circle(60, 50, 25, 'F');
-      doc.setFontSize(12);
-      doc.setTextColor(0, 90, 84);
-      doc.text('FF', 55, 55);
+      // Add FabricFlow Logo Image
+      try {
+        // Use your actual logo image from src/images/logo.png
+        doc.addImage(LogoImage, 'PNG', 30, 20, 60, 60);
+      } catch (error) {
+        console.log('Logo image failed to load, using fallback');
+        // Professional fallback if image doesn't load
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(30, 20, 60, 60, 10, 10, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        doc.setTextColor(0, 90, 84);
+        doc.text('FF', 55, 55);
+      }
       
       // Company Name and Title
       doc.setFontSize(28);
