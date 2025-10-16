@@ -161,11 +161,23 @@ const EmployeeTable = () => {
     if (!searchTerm.trim()) {
       setFilteredEmployees(employees);
     } else {
-      const filtered = employees.filter((employee) =>
-        Object.values(employee).some((value) =>
-          String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
+      const filtered = employees.filter((employee) => {
+        const searchFields = [
+          employee.empName || '',
+          employee.emailAddress || '',
+          employee.empPhone || '',
+          employee.jobPosition || '',
+          employee.empId || '',
+          employee.age || '',
+          employee.gender || '',
+          employee.status || '',
+          employee._id || ''
+        ];
+        
+        return searchFields.some(field =>
+          String(field).toLowerCase().startsWith(searchTerm.toLowerCase())
+        );
+      });
       setFilteredEmployees(filtered);
     }
   }, [searchTerm, employees]);

@@ -173,11 +173,21 @@ const UserTable = () => {
     if (!searchTerm.trim()) {
       setFilteredUsers(users);
     } else {
-      const filtered = users.filter((user) =>
-        Object.values(user).some((value) =>
-          String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
+      const filtered = users.filter((user) => {
+        const searchFields = [
+          user.name || '',
+          user.email || '',
+          user.gmail || '',
+          user.phone || '',
+          user.address || '',
+          user.role || '',
+          user._id || ''
+        ];
+        
+        return searchFields.some(field =>
+          String(field).toLowerCase().startsWith(searchTerm.toLowerCase())
+        );
+      });
       setFilteredUsers(filtered);
     }
   }, [searchTerm, users]);
