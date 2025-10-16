@@ -436,24 +436,6 @@ const AdminDashboard = () => {
                   </motion.div>
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Logout">
-                <Button
-                  onClick={handleLogout}
-                  variant="outlined"
-                  startIcon={<Logout />}
-                  sx={{
-                    color: '#005A54',
-                    borderColor: '#005A54',
-                    '&:hover': {
-                      backgroundColor: '#005A54',
-                      color: 'white',
-                      borderColor: '#005A54'
-                    }
-                  }}
-                >
-                  Logout
-                </Button>
-              </Tooltip>
             </Box>
           </Box>
         </motion.div>

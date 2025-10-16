@@ -19,16 +19,26 @@ import {
   ViewModule
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminHeader = ({ drawerWidth = 280 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/', { replace: true });
     setAnchorEl(null);
   };
 
@@ -162,7 +172,7 @@ const AdminHeader = ({ drawerWidth = 280 }) => {
             Settings
           </MenuItem>
           <Divider />
-          <MenuItem onClick={handleMenuClose}>
+          <MenuItem onClick={handleLogout}>
             <Logout sx={{ mr: 2, color: '#EF6869' }} />
             Logout
           </MenuItem>
