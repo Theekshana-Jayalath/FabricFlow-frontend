@@ -3,7 +3,6 @@ import { MdDelete } from "react-icons/md";
 import { FaPlus } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "./Sidebar";
 
 function Supplier() {
   const API_BASE = "http://localhost:5000/api/Supplier"; // Updated API path
@@ -111,7 +110,7 @@ function Supplier() {
   return (
     <div className="flex h-screen">
   
-      <div className="flex-1 p-8 bg-green-50 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto font-sans">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-green-900">Suppliers List</h1>
           <input
@@ -124,7 +123,7 @@ function Supplier() {
         </div>
 
         <button
-          className="fixed bottom-8 right-8 bg-green-600 text-white p-5 rounded-full shadow-lg flex items-center justify-center hover:bg-green-700 transition"
+          className="fixed bottom-8 right-8 bg-[#005A54] text-white p-5 rounded-full shadow-lg flex items-center justify-center hover:bg-[#00756D] transition"
           onClick={openAddModal}
         >
           <FaPlus size={20} />
@@ -148,7 +147,7 @@ function Supplier() {
                   <td className="px-4 py-2">{s.contact}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <button
-                      className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition"
+                      className="bg-[#005A54] text-white px-3 py-1 rounded-md hover:bg-[#00756D] transition"
                       onClick={() => {
                         setEditSupplier(s);
                         setShowEditModal(true);
@@ -220,7 +219,7 @@ function Supplier() {
                   Cancel
                 </button>
                 <button
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                  className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#00756D]"
                   onClick={handleAddSupplier}
                 >
                   Add Supplier
@@ -275,7 +274,7 @@ function Supplier() {
                   Cancel
                 </button>
                 <button
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                  className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#00756D]"
                   onClick={handleUpdateSupplier}
                 >
                   Update Supplier

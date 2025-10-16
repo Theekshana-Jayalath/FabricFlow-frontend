@@ -3,7 +3,6 @@ import { MdDelete } from "react-icons/md";
 import { FaPlus } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Sidebar from "./Sidebar"; // adjust path
 
 function Purchases() {
   const [purchases, setPurchases] = useState([]);
@@ -196,9 +195,9 @@ function Purchases() {
   return (
     <div className="flex h-screen">
 
-      <div className="flex-1 p-8 bg-green-50 overflow-auto">
+      <div className="flex-1 overflow-y-auto font-sans">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-green-900">Purchase List</h1>
+          <h1 className="text-2xl font-bold text-green-900">Purchase List</h1>
           <input
             type="text"
             placeholder="Search purchases..."
@@ -209,7 +208,7 @@ function Purchases() {
         </div>
 
         <button
-          className="fixed bottom-8 right-8 bg-green-600 text-white p-5 rounded-full flex items-center justify-center shadow-lg hover:bg-green-700 transition"
+          className="fixed bottom-8 right-8 bg-[#005A54] text-white p-5 rounded-full flex items-center justify-center shadow-lg hover:bg-[#00756D] transition"
           onClick={openAddModal}
         >
           <FaPlus size={20} />
@@ -226,7 +225,7 @@ function Purchases() {
             </thead>
             <tbody>
               {filteredPurchases.map((p) => (
-                <tr key={p._id} className="bg-white rounded-lg shadow-sm">
+                <tr key={p._id} className="bg-white rounded-lg shadow-sm hover:bg-green-100">
                   <td className="px-4 py-2">{p.purchaseId}</td>
                   <td className="px-4 py-2">{p.supplierId?.name || "N/A"}</td>
                   <td className="px-4 py-2">{p.materialId?.name || "N/A"}</td>
@@ -236,7 +235,7 @@ function Purchases() {
                   <td className="px-4 py-2">{p.date ? new Date(p.date).toLocaleDateString() : "N/A"}</td>
                   <td className="px-4 py-2 flex space-x-2">
                     <button
-                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      className="bg-[#005A54] text-white px-3 py-1 rounded hover:bg-[#00756D]"
                       onClick={() => { 
                         setEditPurchase(p); 
                         const supplierMaterials = materials.filter(m =>
@@ -309,7 +308,7 @@ function Purchases() {
               </div>
               <div className="flex justify-end gap-3">
                 <button className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleAddPurchase}>Add Purchase</button>
+                <button className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg-[#00756D]" onClick={handleAddPurchase}>Add Purchase</button>
               </div>
             </div>
           </div>
@@ -358,7 +357,7 @@ function Purchases() {
               </div>
               <div className="flex justify-end gap-3">
                 <button className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" onClick={handleUpdatePurchase}>Update Purchase</button>
+                <button className="bg-[#005A54] text-white px-4 py-2 rounded hover:bg[#00756D]" onClick={handleUpdatePurchase}>Update Purchase</button>
               </div>
             </div>
           </div>

@@ -17,7 +17,7 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const EXPENSE_URL = "http://localhost:5000/api/expenses";
-const PURCHASE_URL = "http://localhost:5000/purchases";
+const PURCHASE_URL = "http://localhost:5000/api/Purchase";
 const PAYROLL_URL = "http://localhost:5000/api/payrolls";
 const ORDERS_URL = "http://localhost:5000/api/orders";
 
@@ -87,7 +87,7 @@ const FinanceReport = () => {
   const chartData = {
     labels: filteredMonths,
     datasets: [
-      { label: "Income", data: filteredMonths.map((m) => monthlyTotals[m].income), backgroundColor: "#16a34a" },
+      { label: "Income", data: filteredMonths.map((m) => monthlyTotals[m].income), backgroundColor: "#00756D" },
       { label: "Expenses", data: filteredMonths.map((m) => monthlyTotals[m].expenses), backgroundColor: "#ef4444" },
       { label: "Purchases", data: filteredMonths.map((m) => monthlyTotals[m].purchases), backgroundColor: "#3b82f6" },
       { label: "Payroll", data: filteredMonths.map((m) => monthlyTotals[m].payroll), backgroundColor: "#facc15" },
@@ -201,10 +201,10 @@ const FinanceReport = () => {
   if (loading) return <div className="p-6 text-center">Loading report…</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 p-8">
+    <div className="min-h-screen ">
       <div className="max-w-6xl mx-auto">
         <header className="mb-8 text-center">
-          <h1 className="text-4xl font-extrabold text-green-700 tracking-wide">
+          <h1 className="text-4xl font-extrabold text-[#005654] tracking-wide">
             FABRIC FLOW
           </h1>
           <p className="text-lg text-gray-600 mt-1">Profit / Loss Report</p>
@@ -241,7 +241,7 @@ const FinanceReport = () => {
 
         {/* Chart */}
         <div className="bg-white shadow-lg rounded-2xl p-6 mb-8">
-          <h2 className="text-2xl font-semibold text-green-700 mb-4">Monthly Profit & Loss</h2>
+          <h2 className="text-2xl font-semibold text-[#005654] mb-4">Monthly Profit & Loss</h2>
           <Bar
             data={chartData}
             options={{
@@ -256,8 +256,8 @@ const FinanceReport = () => {
           <button
             onClick={downloadTablePDF}
             className="
-              bg-gradient-to-r from-green-500 to-green-700
-              hover:from-green-600 hover:to-green-800
+              bg-gradient-to-r bg-[#005654]
+              hover:bg-[#00756D]
               text-white font-bold
               px-8 py-3
               rounded-full
@@ -274,9 +274,9 @@ const FinanceReport = () => {
 
         {/* Table */}
         <div className="bg-white shadow-lg rounded-2xl p-6 overflow-auto">
-          <h2 className="text-2xl font-semibold text-green-700 mb-4">Monthly Breakdown</h2>
+          <h2 className="text-2xl font-semibold text-[#005654] mb-4">Monthly Breakdown</h2>
           <table className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
-            <thead className="bg-green-600 text-white">
+            <thead className="bg-[#005654] text-white">
               <tr>
                 <th className="p-3 border">Month</th>
                 <th className="p-3 border">Income (Rs)</th>
