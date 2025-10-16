@@ -85,13 +85,43 @@ const VehicleManagement = () => {
   };
 
   useEffect(() => {
-    fetchVehicles(1, searchTerm, statusFilter, typeFilter);
+
+    fetchVehicles(1, '', statusFilter, typeFilter);
     fetchDrivers();
-  }, [searchTerm, statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
+
+  const filteredVehicles = vehicles.filter((vehicle) => {
+    const rawQ = searchTerm.trim();
+    const q = rawQ.toLowerCase();
+
+    // If search is empty, include all vehicles
+    if (!q) return true;
+
+    const registrationRaw = (vehicle.registrationNumber || '').toString();
+    const brand = (vehicle.brand || '').toLowerCase();
+    const model = (vehicle.model || '').toLowerCase();
+
+    // Normalized alphanumeric registration (letters+digits, no punctuation/spaces)
+    const registrationAlnum = registrationRaw.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    // Registration digits only (used when user types digits)
+    const registrationDigits = registrationRaw.replace(/\D/g, '');
+
+    // If the query is digits-only, allow numeric substring match inside the registration digits
+    if (/^\d+$/.test(rawQ)) {
+      return registrationDigits.includes(q);
+    }
+
+    // For general queries (contains letters), enforce prefix match on normalized values
+    return (
+      registrationAlnum.startsWith(q) ||
+      brand.startsWith(q) ||
+      model.startsWith(q)
+    );
+  });
 
   const handleStatusFilter = (e) => {
     setStatusFilter(e.target.value);
@@ -102,12 +132,14 @@ const VehicleManagement = () => {
   };
 
   const handlePageChange = (newPage) => {
-    fetchVehicles(newPage, searchTerm, statusFilter, typeFilter);
+    // Do not send searchTerm to backend; paging should fetch full page and
+    // the frontend will apply the current search filter to the fetched list.
+    fetchVehicles(newPage, '', statusFilter, typeFilter);
   };
 
   const handleVehicleAdded = () => {
     setShowAddModal(false);
-    fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+    fetchVehicles(pagination.currentPage, '', statusFilter, typeFilter);
   };
 
   const handleEditVehicle = (vehicle) => {
@@ -118,7 +150,7 @@ const VehicleManagement = () => {
   const handleVehicleUpdated = () => {
     setShowEditModal(false);
     setSelectedVehicle(null);
-    fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+    fetchVehicles(pagination.currentPage, '', statusFilter, typeFilter);
   };
 
   const handleCloseEditModal = () => {
@@ -140,7 +172,7 @@ const VehicleManagement = () => {
       });
 
       if (response.ok) {
-        fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+        fetchVehicles(pagination.currentPage, '', statusFilter, typeFilter);
       } else {
         alert('Failed to delete vehicle');
       }
@@ -167,7 +199,7 @@ const VehicleManagement = () => {
       if (response.ok) {
         setShowAssignDriverModal(false);
         setSelectedVehicle(null);
-        fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+        fetchVehicles(pagination.currentPage, '', statusFilter, typeFilter);
         alert('Driver assigned successfully!');
       } else {
         const data = await response.json();
@@ -192,7 +224,7 @@ const VehicleManagement = () => {
       });
 
       if (response.ok) {
-        fetchVehicles(pagination.currentPage, searchTerm, statusFilter, typeFilter);
+        fetchVehicles(pagination.currentPage, '', statusFilter, typeFilter);
         alert('Driver unassigned successfully!');
       } else {
         const data = await response.json();
@@ -465,10 +497,10 @@ const VehicleManagement = () => {
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
-        ) : vehicles.length === 0 ? (
+        ) : filteredVehicles.length === 0 ? (
           <div className="text-center py-12">
             <Truck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No vehicles found</p>
+            <p className="text-gray-500">No vehicles match your search</p>
           </div>
         ) : (
           <>
@@ -494,7 +526,7 @@ const VehicleManagement = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {vehicles.map((vehicle) => (
+                  {filteredVehicles.map((vehicle) => (
                     <tr key={vehicle._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">

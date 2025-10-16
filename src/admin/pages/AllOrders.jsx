@@ -20,6 +20,8 @@ const AllOrders = () => {
     endDate: '',
     orderStatus: 'COMPLETED' // Default to completed orders
   });
+  
+  const [orderSearch, setOrderSearch] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -56,8 +58,7 @@ const AllOrders = () => {
       if (filters.orderStatus) {
         params.set('status', filters.orderStatus);
       }
-      // If no specific status is selected, we'll fetch all orders and filter on frontend
-      // since the backend API doesn't support multiple statuses in one call
+      
 
       const url = `http://localhost:5000/api/orders?${params}`;
       console.log('Fetching orders from:', url); // Debug log
@@ -87,6 +88,16 @@ const AllOrders = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle order search changes: keep digits only so user types just the number part
+  const handleOrderSearchChange = (e) => {
+    const raw = e.target.value || '';
+    // Remove all non-digits - user will type only the numeric part
+    const digitsOnly = raw.replace(/\D/g, '');
+    setOrderSearch(digitsOnly);
+    // Reset to first page when searching
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const fetchAvailableDrivers = async () => {
@@ -235,6 +246,19 @@ const AllOrders = () => {
       minute: '2-digit'
     });
   };
+
+ 
+  const filteredOrders = completedOrders.filter(order => {
+    if (!orderSearch) return true;
+    const id = order.orderId || '';
+    // numeric part of the order id (e.g. ORD12345 -> 12345)
+    const numericPart = id.replace(/\D/g, '');
+    if (numericPart && orderSearch) {
+      return numericPart.startsWith(orderSearch);
+    }
+    // fallback: case-insensitive startsWith on the full id
+    return id.toLowerCase().startsWith(orderSearch.toLowerCase());
+  });
 
   if (loading) {
     return (
@@ -400,6 +424,23 @@ const AllOrders = () => {
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search Order ID</label>
+            {/*
+              Input shows the suggestion "Order #ORD" by placeholder, but we accept only digits.
+              The user should type only the numeric part (e.g., "48749421994").
+              We store digits-only in `orderSearch` and filter the visible list in real-time.
+            */}
+            <input
+              type="text"
+              name="orderSearch"
+              value={orderSearch}
+              onChange={handleOrderSearchChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#005A54] focus:border-transparent"
+              placeholder="Order #ORD (type only numbers)"
+              inputMode="numeric"
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
             <input
               type="text"
@@ -492,7 +533,7 @@ const AllOrders = () => {
                   </td>
                 </tr>
               ) : (
-                completedOrders.map((order) => (
+                filteredOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>

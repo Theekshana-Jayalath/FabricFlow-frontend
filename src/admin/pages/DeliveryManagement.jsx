@@ -6,6 +6,8 @@ import autoTable from 'jspdf-autotable';
 const DeliveryManagement = () => {
   const [deliveredOrders, setDeliveredOrders] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  // Search query state for client-side filtering
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -217,6 +219,31 @@ const DeliveryManagement = () => {
     );
   }
 
+  // Prepare filtered list based on searchQuery (frontend-only)
+  // Behavior: case-insensitive, 'starts with' matching against the
+  // combined string "Order #<orderId> <customerName>" so searches like
+  // 'O', 'Order', 'ORD...' or the raw order id 'ORD55418337639' (with or
+  // without a leading '#') will match appropriately.
+  const q = (searchQuery || '').trim().toLowerCase();
+  const filteredOrders = q === '' ? deliveredOrders : deliveredOrders.filter((order) => {
+    const orderId = (order.orderId || '').toString().toLowerCase();
+    const orderIdWithHash = `#${orderId}`;
+    const orderLabel = `order #${orderId}`; // lower-cased label
+    const customerName = (order.customer?.name || '').toString().toLowerCase();
+
+    // startsWith behavior per-field (keeps the UX of first-character filtering):
+    // - If the user types 'order' or 'o' -> orderLabel startsWith(q) will match
+    // - If the user types the raw id 'ord554...' -> orderId.startsWith(q) will match
+    // - If the user types '#ord554...' -> orderIdWithHash.startsWith(q) will match
+    // - If the user types a customer name starting letters -> customerName.startsWith(q) will match
+    if (orderLabel.startsWith(q)) return true;
+    if (orderIdWithHash.startsWith(q)) return true;
+    if (orderId.startsWith(q)) return true;
+    if (customerName.startsWith(q)) return true;
+
+    return false;
+  });
+
   return (
     <div className="p-4 md:p-16">
       <div className="flex justify-between items-center mb-12">
@@ -248,6 +275,26 @@ const DeliveryManagement = () => {
             Download PDF
           </button>
         </div>
+      </div>
+
+      {/* Search bar - real-time frontend filtering */}
+      <div className="mb-6">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search orders by Order # or customer name (starts with)..."
+          className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005A54]"
+        />
+        {/*
+          Behavior:
+          - Filters deliveredOrders in real-time on each keystroke (frontend-only)
+          - Case-insensitive
+          - Uses 'starts with' matching: when user types the first character,
+            only items whose name/order string starts with that character are shown.
+          - Matches against a display string that includes 'Order #<orderId>' so
+            inputs like 'O' or 'ORD' or the full "Order #ORD55418337639" will match.
+        */}
       </div>
 
       {/* Statistics Cards */}
@@ -338,7 +385,7 @@ const DeliveryManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {deliveredOrders.length === 0 ? (
+              {filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-16 text-center">
                     <h3 className="text-xl font-semibold text-gray-500 mb-2">
@@ -350,7 +397,7 @@ const DeliveryManagement = () => {
                   </td>
                 </tr>
               ) : (
-                deliveredOrders.map((order) => (
+                filteredOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>

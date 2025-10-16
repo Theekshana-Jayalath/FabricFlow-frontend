@@ -49,17 +49,44 @@ const AssignedOrders = () => {
   }, []);
 
   useEffect(() => {
-    // Filter orders based on search term
-    if (searchTerm) {
-      const filtered = orders.filter(order =>
-        order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredOrders(filtered);
-    } else {
+    // Real-time filtering behavior (startsWith, case-insensitive):
+    // - When searchTerm is empty -> show all orders
+    // - When user types letters -> match Customer name STARTS WITH the input (case-insensitive)
+    // - When user types digits only -> match Order ID numeric portion (treat "ORD" as a default prefix)
+    //   Example: order.orderId === "ORD86416786928". If user types "8641" we match because numeric part startsWith "8641".
+    // - Matching is done with startsWith (not includes) as requested.
+    if (!searchTerm || !searchTerm.trim()) {
       setFilteredOrders(orders);
+      return;
     }
+
+    const term = searchTerm.trim().toLowerCase();
+    const isDigitsOnly = /^\d+$/.test(term);
+
+    const filtered = orders.filter((order) => {
+      const customerName = (order.customer?.name || '').toLowerCase();
+      const orderId = (order.orderId || '').toLowerCase();
+
+      // Customer match: startsWith the typed term
+      const matchesCustomer = customerName.startsWith(term);
+
+      // Order ID match:
+      // - If user typed only digits, remove any leading non-digit prefix (like 'ord') from orderId
+      //   and compare the numeric portion using startsWith.
+      // - Otherwise, compare the full orderId string using startsWith.
+      let matchesOrderId = false;
+      if (isDigitsOnly) {
+        // remove common prefix letters (e.g., 'ord') to get numeric portion
+        const numericPortion = orderId.replace(/^ord/i, '');
+        matchesOrderId = numericPortion.startsWith(term);
+      } else {
+        matchesOrderId = orderId.startsWith(term);
+      }
+
+      return matchesCustomer || matchesOrderId;
+    });
+
+    setFilteredOrders(filtered);
   }, [searchTerm, orders]);
 
   const fetchAssignedOrders = async () => {
@@ -203,8 +230,9 @@ const formatCurrency = (amount) => {
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Search by Order ID, Customer Name, or Email..."
+          placeholder="Search by Order ID or Customer Name..."
           value={searchTerm}
+          // controlled input for real-time filtering
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
@@ -212,6 +240,20 @@ const formatCurrency = (amount) => {
                 <Search />
               </InputAdornment>
             ),
+            // add a clear (X) button to the end of the input for convenience
+            endAdornment: (
+              <InputAdornment position="end">
+                {searchTerm && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setSearchTerm('')}
+                    aria-label="Clear search"
+                  >
+                    <Close fontSize="small" />
+                  </IconButton>
+                )}
+              </InputAdornment>
+            )
           }}
           sx={{ maxWidth: 500 }}
         />
