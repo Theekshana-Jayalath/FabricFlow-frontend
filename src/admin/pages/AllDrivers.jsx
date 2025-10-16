@@ -45,20 +45,18 @@ const AllDrivers = () => {
     fetchDrivers();
   }, []);
 
-  // Filter drivers based on search term
+ 
   const filteredDrivers = useMemo(() => {
-    if (!searchTerm.trim()) return drivers;
-    const term = searchTerm.toLowerCase();
-    return drivers.filter((driver) => {
-      return (
-        (driver.empId || '').toLowerCase().includes(term) ||
-        (driver.empName || '').toLowerCase().includes(term) ||
-        (driver.empPhone || '').toLowerCase().includes(term) ||
-        (driver.emailAddress || '').toLowerCase().includes(term) ||
-        (driver.status || '').toLowerCase().includes(term) ||
-        (driver.address || '').toLowerCase().includes(term) ||
-        (driver.jobPosition || '').toLowerCase().includes(term)
-      );
+    // Normalize search term to lowercase and trim spaces
+    const term = String(searchTerm || '').trim().toLowerCase();
+
+    // If no search term, return all drivers (original order)
+    if (term === '') return drivers;
+
+    // Return only drivers whose empName starts with the search term (case-insensitive)
+    return drivers.filter(driver => {
+      const name = String(driver?.empName || '').toLowerCase();
+      return name.startsWith(term);
     });
   }, [drivers, searchTerm]);
 
@@ -412,7 +410,7 @@ const AllDrivers = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by Employee ID, name, phone, email, status, or address..."
+            placeholder="Search by Employee name"
             className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#005A54] focus:border-transparent"
           />
         </div>
