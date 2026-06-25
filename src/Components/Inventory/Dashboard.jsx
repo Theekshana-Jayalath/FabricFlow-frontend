@@ -17,17 +17,17 @@ function InventoryDashboard() {
 
   useEffect(() => {
     const fetchData = () => {
-      fetch("http://localhost:5000/api/Material")
+      fetch("https://fabricflow-backend1.onrender.com/api/Material")
         .then((res) => res.json())
         .then((data) => setMaterials(data.materials || []))
         .catch((err) => console.error("Error fetching materials:", err));
 
-      fetch("http://localhost:5000/api/Supplier")
+      fetch("https://fabricflow-backend1.onrender.com/api/Supplier")
         .then((res) => res.json())
         .then((data) => setSuppliers(Array.isArray(data) ? data : data.suppliers || []))
         .catch((err) => console.error("Error fetching suppliers:", err));
 
-      fetch("http://localhost:5000/api/Purchase")
+      fetch("https://fabricflow-backend1.onrender.com/api/Purchase")
         .then((res) => res.json())
         .then((data) => setPurchases(data.purchases || []))
         .catch((err) => console.error("Error fetching purchases:", err));

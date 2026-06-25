@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import UserDisplay from "../UserDisplay/UserDisplay.jsx";
 import axios from "axios";
 
-const URL = "http://localhost:5000/users";
+const URL = "https://fabricflow-backend1.onrender.com/users";
 
 const fetchHandler = async () => {
   try {
@@ -110,7 +110,7 @@ function UserDetails() {
             <div className="text-center py-8">
               <p className="text-gray-500">No users found or backend not connected</p>
               <p className="text-sm text-gray-400 mt-2">
-                Make sure your backend server is running on http://localhost:5000
+                Make sure your backend server is running on https://fabricflow-backend1.onrender.com
               </p>
             </div>
           )}

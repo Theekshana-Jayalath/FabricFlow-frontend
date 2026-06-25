@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 function Supplier() {
-  const API_BASE = "http://localhost:5000/api/Supplier"; // Updated API path
+  const API_BASE = "https://fabricflow-backend1.onrender.com/api/Supplier"; // Updated API path
 
   const [suppliers, setSuppliers] = useState([]);
   const [supplierLoaded, setSupplierLoaded] = useState(false);

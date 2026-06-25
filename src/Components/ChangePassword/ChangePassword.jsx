@@ -100,7 +100,7 @@ function ChangePassword() {
 
       console.log('Attempting to change password for user:', userEmail);
 
-      const response = await axios.post('http://localhost:5000/auth/change-password', {
+      const response = await axios.post('https://fabricflow-backend1.onrender.com/auth/change-password', {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword,
         userEmail: userEmail

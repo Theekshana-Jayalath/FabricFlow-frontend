@@ -26,7 +26,7 @@ const VehicleManagement = () => {
   const fetchVehicles = async (page = 1, search = '', status = '', type = '') => {
     try {
       setLoading(true);
-      let url = `http://localhost:5000/api/vehicles?page=${page}&limit=10`;
+      let url = `https://fabricflow-backend1.onrender.com/api/vehicles?page=${page}&limit=10`;
       
       if (search) url += `&search=${encodeURIComponent(search)}`;
       if (status) url += `&status=${encodeURIComponent(status)}`;
@@ -65,7 +65,7 @@ const VehicleManagement = () => {
   // Fetch drivers from backend
   const fetchDrivers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/drivers', {
+      const response = await fetch('https://fabricflow-backend1.onrender.com/api/drivers', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ const VehicleManagement = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/vehicles/${vehicleId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ const VehicleManagement = () => {
 
   const handleDriverAssignment = async (driverId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/vehicles/${selectedVehicle._id}/assign-driver`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/vehicles/${selectedVehicle._id}/assign-driver`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +188,7 @@ const VehicleManagement = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/vehicles/${vehicleId}/unassign-driver`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/vehicles/${vehicleId}/unassign-driver`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

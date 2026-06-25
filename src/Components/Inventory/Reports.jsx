@@ -17,17 +17,17 @@ function InventoryReports() {
   useEffect(() => {
     if (!reportLoaded) {
       axios
-        .get("http://localhost:5000/api/Purchase")
+        .get("https://fabricflow-backend1.onrender.com/api/Purchase")
         .then((res) => setPurchases(res.data.purchases || res.data))
         .catch((err) => console.error(err));
 
       axios
-        .get("http://localhost:5000/api/Supplier")
+        .get("https://fabricflow-backend1.onrender.com/api/Supplier")
         .then((res) => setSuppliers(res.data.suppliers || res.data))
         .catch((err) => console.error(err));
 
       axios
-        .get("http://localhost:5000/api/Material")
+        .get("https://fabricflow-backend1.onrender.com/api/Material")
         .then((res) => setMaterials(res.data.materials || res.data))
         .catch((err) => console.error(err));
 

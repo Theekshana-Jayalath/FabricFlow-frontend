@@ -88,7 +88,7 @@ function ManualPasswordChange() {
     setMessage('');
     
     try {
-      const response = await fetch('http://localhost:5000/auth/manual-change-password', {
+      const response = await fetch('https://fabricflow-backend1.onrender.com/auth/manual-change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -390,7 +390,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
           };
           
           console.log('📡 Attempting auth/register endpoint:', userData);
-          const backendResponse = await axios.post('http://localhost:5000/auth/register', userData);
+          const backendResponse = await axios.post('https://fabricflow-backend1.onrender.com/auth/register', userData);
           console.log('✅ User registered via auth/register:', backendResponse.data);
           
           // Use backend response data and ensure it has proper structure
@@ -424,7 +424,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
             };
             
             console.log('📡 Attempting direct users endpoint:', fallbackData);
-            const fallbackResponse = await axios.post('http://localhost:5000/users', fallbackData);
+            const fallbackResponse = await axios.post('https://fabricflow-backend1.onrender.com/users', fallbackData);
             console.log('✅ User created via direct users endpoint:', fallbackResponse.data);
             
             // Use fallback response
@@ -474,7 +474,7 @@ const UserModal = ({ open, onClose, user, mode, onUserUpdate }) => {
         };
         
         try {
-          response = await axios.put(`http://localhost:5000/users/${user._id}`, backendData);
+          response = await axios.put(`https://fabricflow-backend1.onrender.com/users/${user._id}`, backendData);
           console.log('User updated successfully:', response.data);
         } catch (updateError) {
           console.log('Backend update failed, using local update');

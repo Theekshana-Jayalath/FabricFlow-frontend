@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const EXPENSE_URL = "http://localhost:5000/api/expenses";
+const EXPENSE_URL = "https://fabricflow-backend1.onrender.com/api/expenses";
 
 const UpdateExpense = () => {
   const location = useLocation();

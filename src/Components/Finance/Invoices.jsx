@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const URL = "http://localhost:5000/api/orders";
+const URL = "https://fabricflow-backend1.onrender.com/api/orders";
 
 const fetchHandler = async () => {
   try {

@@ -20,7 +20,7 @@ const AllDrivers = () => {
     const fetchDrivers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5000/employees/drivers');
+        const response = await axios.get('https://fabricflow-backend1.onrender.com/employees/drivers');
         
         if (response.data.success) {
           setDrivers(response.data.drivers || []);
@@ -93,7 +93,7 @@ const AllDrivers = () => {
     
     setModalLoading(true);
     try {
-      const response = await axios.put(`http://localhost:5000/employees/${editDriver._id}`, {
+      const response = await axios.put(`https://fabricflow-backend1.onrender.com/employees/${editDriver._id}`, {
         empId: editDriver.empId,
         empName: editDriver.empName,
         empPhone: editDriver.empPhone,
@@ -129,7 +129,7 @@ const AllDrivers = () => {
     setModalLoading(true);
     try {
       const updatedDriver = { ...editDriver, status: newStatus };
-      const response = await axios.put(`http://localhost:5000/employees/${editDriver._id}`, {
+      const response = await axios.put(`https://fabricflow-backend1.onrender.com/employees/${editDriver._id}`, {
         empId: updatedDriver.empId,
         empName: updatedDriver.empName,
         empPhone: updatedDriver.empPhone,

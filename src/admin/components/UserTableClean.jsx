@@ -66,7 +66,7 @@ const UserTable = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/users');
+      const response = await axios.get('https://fabricflow-backend1.onrender.com/users');
       const userData = response.data?.users || response.data || [];
       setUsers(userData);
       setFilteredUsers(userData);
@@ -115,7 +115,7 @@ const UserTable = () => {
     if (!userToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/users/${userToDelete._id}`);
+      await axios.delete(`https://fabricflow-backend1.onrender.com/users/${userToDelete._id}`);
       setUsers(users.filter(u => u._id !== userToDelete._id));
       showAlert(`User "${userToDelete.name}" deleted successfully!`, 'success');
       setDeleteDialogOpen(false);

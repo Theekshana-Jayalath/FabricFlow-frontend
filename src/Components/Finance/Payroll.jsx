@@ -3,7 +3,7 @@ import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const API_URL = "http://localhost:5000/api/payrolls";
+const API_URL = "https://fabricflow-backend1.onrender.com/api/payrolls";
 
 const Payroll = () => {
   const [payrolls, setPayrolls] = useState([]);

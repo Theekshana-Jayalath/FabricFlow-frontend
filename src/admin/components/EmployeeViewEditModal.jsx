@@ -378,7 +378,7 @@ const EmployeeViewEditModal = ({ open, onClose, employee, mode, onEmployeeUpdate
         salary: formData.salary ? parseFloat(formData.salary) : null
       };
 
-      const response = await axios.put(`http://localhost:5000/employees/${employee._id}`, updateData);
+      const response = await axios.put(`https://fabricflow-backend1.onrender.com/employees/${employee._id}`, updateData);
       
       if (onEmployeeUpdate) {
         onEmployeeUpdate(response.data.employee || response.data);

@@ -109,8 +109,8 @@ const AdminDashboard = () => {
       
       // Fetch users and employees in parallel
       const [usersResponse, employeesResponse] = await Promise.all([
-        axios.get('http://localhost:5000/users').catch(() => ({ data: { users: [] } })),
-        axios.get('http://localhost:5000/employees').catch(() => ({ data: { employees: [] } }))
+        axios.get('https://fabricflow-backend1.onrender.com/users').catch(() => ({ data: { users: [] } })),
+        axios.get('https://fabricflow-backend1.onrender.com/employees').catch(() => ({ data: { employees: [] } }))
       ]);
 
       const users = usersResponse.data?.users || usersResponse.data || [];

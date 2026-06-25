@@ -43,7 +43,7 @@ const EditVehicleModal = ({ vehicle, onClose, onVehicleUpdated }) => {
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/drivers/allDrivers', {
+        const response = await fetch('https://fabricflow-backend1.onrender.com/api/drivers/allDrivers', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ const EditVehicleModal = ({ vehicle, onClose, onVehicleUpdated }) => {
         assignedDriverId: formData.assignedDriverId || null
       };
 
-      const response = await fetch(`http://localhost:5000/api/vehicles/${vehicle._id}`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/vehicles/${vehicle._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

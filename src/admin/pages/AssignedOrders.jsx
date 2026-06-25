@@ -65,7 +65,7 @@ const AssignedOrders = () => {
   const fetchAssignedOrders = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/orders/assigned/drivers');
+      const response = await axios.get('https://fabricflow-backend1.onrender.com/api/orders/assigned/drivers');
       setOrders(response.data.orders);
       setError('');
     } catch (error) {

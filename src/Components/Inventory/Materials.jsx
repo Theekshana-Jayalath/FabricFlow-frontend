@@ -33,7 +33,7 @@ function Materials() {
   // --- Fetch helpers ---
   const fetchMaterials = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/Material");
+      const res = await axios.get("https://fabricflow-backend1.onrender.com/api/Material");
       setMaterials(res.data.materials || res.data || []);
     } catch (err) {
       console.error("Failed to fetch materials:", err);
@@ -42,7 +42,7 @@ function Materials() {
 
   const fetchSuppliers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/Supplier");
+      const res = await axios.get("https://fabricflow-backend1.onrender.com/api/Supplier");
       setSuppliers(res.data.suppliers || res.data || []);
     } catch (err) {
       console.error("Failed to fetch suppliers:", err);
@@ -119,7 +119,7 @@ function Materials() {
     }
 
     try {
-      await axios.post("http://localhost:5000/api/Material", materialToAdd);
+      await axios.post("https://fabricflow-backend1.onrender.com/api/Material", materialToAdd);
       await fetchMaterials();
       alert("Material added successfully!");
       setShowAddModal(false);
@@ -154,7 +154,7 @@ function Materials() {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/Material/${editMaterial._id}`, updatedMaterial);
+      await axios.put(`https://fabricflow-backend1.onrender.com/api/Material/${editMaterial._id}`, updatedMaterial);
       await fetchMaterials();
       alert("Material updated successfully!");
       setShowEditModal(false);
@@ -166,7 +166,7 @@ function Materials() {
 
   const handleDelete = (id) => {
     if (!confirm("Are you sure?")) return;
-    axios.delete(`http://localhost:5000/api/Material/${id}`)
+    axios.delete(`https://fabricflow-backend1.onrender.com/api/Material/${id}`)
       .then(() => setMaterials(prev => prev.filter(mat => mat._id !== id)))
       .catch(err => alert("Error deleting material: " + (err.message || err)));
   };

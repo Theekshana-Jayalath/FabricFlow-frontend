@@ -19,11 +19,11 @@ import {
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const ExpensesURL = "http://localhost:5000/api/expenses";
-const PurchasesURL = "http://localhost:5000/purchases";
-const PayrollURL = "http://localhost:5000/api/payrolls";
-const ProfileURL = "http://localhost:5000/api/profile";
-const OrdersURL = "http://localhost:5000/api/orders";
+const ExpensesURL = "https://fabricflow-backend1.onrender.com/api/expenses";
+const PurchasesURL = "https://fabricflow-backend1.onrender.com/purchases";
+const PayrollURL = "https://fabricflow-backend1.onrender.com/api/payrolls";
+const ProfileURL = "https://fabricflow-backend1.onrender.com/api/profile";
+const OrdersURL = "https://fabricflow-backend1.onrender.com/api/orders";
 
 const FinanceDashboard = ({ onTotalExpensesChange }) => {
   const navigate = useNavigate();

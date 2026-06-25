@@ -6,7 +6,7 @@ import { FaSave, FaArrowLeft, FaPlus, FaMinus, FaShoppingCart, FaDownload, FaFil
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const URL = "http://localhost:5000/api/orders";
+const URL = "https://fabricflow-backend1.onrender.com/api/orders";
 
 const SIZES = [
   "28", "30", "32", "34", "36", "38", // For Bottomwear

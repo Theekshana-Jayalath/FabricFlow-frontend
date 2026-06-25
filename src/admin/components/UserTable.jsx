@@ -104,7 +104,7 @@ const UserTable = () => {
       let backendUsers = [];
       try {
         console.log('📡 Attempting to fetch from backend...');
-        const response = await axios.get('http://localhost:5000/users');
+        const response = await axios.get('https://fabricflow-backend1.onrender.com/users');
         backendUsers = response.data?.users || response.data || [];
         console.log('✅ Fetched users from backend:', backendUsers.length);
         console.log('Backend users:', backendUsers.map(u => ({ id: u._id, name: u.name, email: u.gmail || u.email })));
@@ -198,7 +198,7 @@ const UserTable = () => {
     if (!userToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/users/${userToDelete._id}`);
+      await axios.delete(`https://fabricflow-backend1.onrender.com/users/${userToDelete._id}`);
       setUsers(users.filter(u => u._id !== userToDelete._id));
       showAlert(`User "${userToDelete.name}" deleted successfully!`, 'success');
       setDeleteDialogOpen(false);

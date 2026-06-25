@@ -426,7 +426,7 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
           
           console.log('🚀 Sending employee data to backend...');
           console.log('Backend Data:', JSON.stringify(backendData, null, 2));
-          console.log('POST URL: http://localhost:5000/employees');
+          console.log('POST URL: https://fabricflow-backend1.onrender.com/employees');
           
           // Validate required fields before sending
           const missingFields = [];
@@ -443,7 +443,7 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
             return;
           }
           
-          const backendResponse = await axios.post('http://localhost:5000/employees', backendData);
+          const backendResponse = await axios.post('https://fabricflow-backend1.onrender.com/employees', backendData);
           console.log('✅ SUCCESS! Employee saved to backend:', backendResponse.data);
           
           // Check if the response indicates success
@@ -516,7 +516,7 @@ const EmployeeModal = ({ open, onClose, employee, mode, onEmployeeUpdate }) => {
         };
         
         try {
-          response = await axios.put(`http://localhost:5000/employees/${employee._id}`, backendData);
+          response = await axios.put(`https://fabricflow-backend1.onrender.com/employees/${employee._id}`, backendData);
           console.log('Employee updated successfully:', response.data);
         } catch (updateError) {
           console.log('Backend update failed, using local update');

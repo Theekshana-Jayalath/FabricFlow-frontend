@@ -4,7 +4,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import './addExpenses.css';
 
-const EXPENSE_URL = "http://localhost:5000/api/expenses";
+const EXPENSE_URL = "https://fabricflow-backend1.onrender.com/api/expenses";
 
 const FinanceAddExpenses = () => {
   const navigate = useNavigate();

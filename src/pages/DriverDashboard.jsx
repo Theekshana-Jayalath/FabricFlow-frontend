@@ -24,7 +24,7 @@ function DriverDashboard() {
   const fetchAssignedVehicle = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/vehicles', {
+      const response = await fetch('https://fabricflow-backend1.onrender.com/api/vehicles', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ function DriverDashboard() {
   const fetchDeliveryOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/distributions/assigned?driverId=${user._id}`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/distributions/assigned?driverId=${user._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ function DriverDashboard() {
   const updateDeliveryStatus = async (distributionId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/distributions/${distributionId}/status`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/distributions/${distributionId}/status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

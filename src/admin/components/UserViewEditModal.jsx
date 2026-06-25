@@ -290,7 +290,7 @@ const UserViewEditModal = ({ open, onClose, user, mode, onUserUpdate }) => {
         age: formData.age ? parseInt(formData.age) : null
       };
 
-      const response = await axios.put(`http://localhost:5000/users/${user._id}`, updateData);
+      const response = await axios.put(`https://fabricflow-backend1.onrender.com/users/${user._id}`, updateData);
       
       if (onUserUpdate) {
         onUserUpdate(response.data.user || response.data);

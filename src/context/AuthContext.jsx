@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       
       // API call to backend
-      const response = await fetch('http://localhost:5000/auth/login', {
+      const response = await fetch('https://fabricflow-backend1.onrender.com/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       
       // API call to backend
-      const response = await fetch('http://localhost:5000/auth/register', {
+      const response = await fetch('https://fabricflow-backend1.onrender.com/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Updating profile with:', updatedData);
       
       // Make API call to update user profile
-      const response = await fetch(`http://localhost:5000/api/users/${user._id}`, {
+      const response = await fetch(`https://fabricflow-backend1.onrender.com/api/users/${user._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

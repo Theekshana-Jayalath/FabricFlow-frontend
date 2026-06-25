@@ -15,7 +15,7 @@ const GoogleOAuthButton = ({ mode = 'login' }) => {
       console.log('Expected OAuth origin: http://localhost:5173');
       
       // Send the Google credential to our backend for verification
-      const response = await axios.post('http://localhost:5000/auth/google-oauth', {
+      const response = await axios.post('https://fabricflow-backend1.onrender.com/auth/google-oauth', {
         credential: credentialResponse.credential,
         mode: mode // 'login' or 'register'
       });

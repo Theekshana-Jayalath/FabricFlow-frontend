@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { FaSave, FaArrowLeft } from "react-icons/fa";
 
-const URL = "http://localhost:5000/api/orders";
+const URL = "https://fabricflow-backend1.onrender.com/api/orders";
 
 const MATERIALS = [
   "Premium Cotton (200 GSM)",

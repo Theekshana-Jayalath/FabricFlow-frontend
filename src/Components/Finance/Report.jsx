@@ -16,10 +16,10 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const EXPENSE_URL = "http://localhost:5000/api/expenses";
-const PURCHASE_URL = "http://localhost:5000/api/Purchase";
-const PAYROLL_URL = "http://localhost:5000/api/payrolls";
-const ORDERS_URL = "http://localhost:5000/api/orders";
+const EXPENSE_URL = "https://fabricflow-backend1.onrender.com/api/expenses";
+const PURCHASE_URL = "https://fabricflow-backend1.onrender.com/api/Purchase";
+const PAYROLL_URL = "https://fabricflow-backend1.onrender.com/api/payrolls";
+const ORDERS_URL = "https://fabricflow-backend1.onrender.com/api/orders";
 
 const FinanceReport = () => {
   const [expenses, setExpenses] = useState([]);

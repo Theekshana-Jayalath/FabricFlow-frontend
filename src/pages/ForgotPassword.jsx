@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -122,7 +122,7 @@ function ForgotPassword() {
 
     try {
       // Use the manual change password endpoint directly
-      const response = await axios.post('http://localhost:5000/auth/manual-change-password', {
+      const response = await axios.post('https://fabricflow-backend1.onrender.com/auth/manual-change-password', {
         email: formData.email,
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
@@ -297,36 +297,36 @@ function ForgotPassword() {
                 <ul className="text-xs text-gray-600 space-y-1">
                   <li className={`flex items-center ${formData.newPassword && formData.newPassword.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-2">
-                      {formData.newPassword && formData.newPassword.length >= 8 ? '✓' : '○'}
+                      {formData.newPassword && formData.newPassword.length >= 8 ? '?' : '?'}
                     </span>
                     Minimum length: 8 characters
                   </li>
                   <li className={`flex items-center ${formData.newPassword && /[A-Z]/.test(formData.newPassword) ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-2">
-                      {formData.newPassword && /[A-Z]/.test(formData.newPassword) ? '✓' : '○'}
+                      {formData.newPassword && /[A-Z]/.test(formData.newPassword) ? '?' : '?'}
                     </span>
                     At least one uppercase letter
                   </li>
                   <li className={`flex items-center ${formData.newPassword && /[a-z]/.test(formData.newPassword) ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-2">
-                      {formData.newPassword && /[a-z]/.test(formData.newPassword) ? '✓' : '○'}
+                      {formData.newPassword && /[a-z]/.test(formData.newPassword) ? '?' : '?'}
                     </span>
                     At least one lowercase letter
                   </li>
                   <li className={`flex items-center ${formData.newPassword && /[0-9]/.test(formData.newPassword) ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-2">
-                      {formData.newPassword && /[0-9]/.test(formData.newPassword) ? '✓' : '○'}
+                      {formData.newPassword && /[0-9]/.test(formData.newPassword) ? '?' : '?'}
                     </span>
                     At least one number
                   </li>
                   <li className={`flex items-center ${formData.newPassword && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword) ? 'text-green-600' : 'text-gray-500'}`}>
                     <span className="mr-2">
-                      {formData.newPassword && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword) ? '✓' : '○'}
+                      {formData.newPassword && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.newPassword) ? '?' : '?'}
                     </span>
                     At least one special character
                   </li>
                   <li className="flex items-center text-gray-500">
-                    <span className="mr-2">○</span>
+                    <span className="mr-2">?</span>
                     Avoid common passwords
                   </li>
                 </ul>
@@ -402,7 +402,7 @@ function ForgotPassword() {
               to="/login"
               className="font-medium text-[#005A54] hover:text-[#004A44] transition-colors"
             >
-              ← Back to Login
+              ? Back to Login
             </Link>
           </div>
         </form>

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import EmployeeDisplay from "../EmployeeDisplay/EmployeeDisplay.jsx";
 import axios from "axios";
 
-const URL = "http://localhost:5000/employees";
+const URL = "https://fabricflow-backend1.onrender.com/employees";
 
 const fetchHandler = async () => {
   try {
@@ -111,7 +111,7 @@ function EmployeeDetails() {
             <div className="text-center py-8">
               <p className="text-gray-500">No employees found or backend not connected</p>
               <p className="text-sm text-gray-400 mt-2">
-                Make sure your backend server is running on http://localhost:5000
+                Make sure your backend server is running on https://fabricflow-backend1.onrender.com
               </p>
             </div>
           )}

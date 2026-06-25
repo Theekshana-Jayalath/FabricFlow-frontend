@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaEdit, FaTrash, FaPlus, FaCalendarAlt, FaTruck, FaSearch, FaFilter } from "react-icons/fa";
 
-const URL = "http://localhost:5000/api/orders";
+const URL = "https://fabricflow-backend1.onrender.com/api/orders";
 
 // Function to get fabric consumption by category
 const getFabricConsumptionByCategory = (categoryName) => {

@@ -59,7 +59,7 @@ const AllOrders = () => {
       // If no specific status is selected, we'll fetch all orders and filter on frontend
       // since the backend API doesn't support multiple statuses in one call
 
-      const url = `http://localhost:5000/api/orders?${params}`;
+      const url = `https://fabricflow-backend1.onrender.com/api/orders?${params}`;
       console.log('Fetching orders from:', url); // Debug log
       const response = await axios.get(url);
       console.log('Orders response:', response.data); // Debug log
@@ -92,7 +92,7 @@ const AllOrders = () => {
   const fetchAvailableDrivers = async () => {
     try {
       // First, try to get all active drivers from employees
-      const response = await axios.get('http://localhost:5000/employees/drivers');
+      const response = await axios.get('https://fabricflow-backend1.onrender.com/employees/drivers');
       console.log('All drivers response:', response.data); // Debug log
       
       if (response.data && response.data.success) {
@@ -108,7 +108,7 @@ const AllOrders = () => {
         
         // Also fetch driver busy status from distribution API
         try {
-          const busyResponse = await axios.get('http://localhost:5000/api/distributions/available-drivers');
+          const busyResponse = await axios.get('https://fabricflow-backend1.onrender.com/api/distributions/available-drivers');
           console.log('Busy drivers response:', busyResponse.data); // Debug log
           
           if (busyResponse.data && busyResponse.data.success) {
@@ -132,7 +132,7 @@ const AllOrders = () => {
       // Fallback: try the distribution endpoint
       try {
         console.log('Trying fallback distribution endpoint...');
-        const fallbackResponse = await axios.get('http://localhost:5000/api/distributions/available-drivers');
+        const fallbackResponse = await axios.get('https://fabricflow-backend1.onrender.com/api/distributions/available-drivers');
         if (fallbackResponse.data && fallbackResponse.data.success) {
           const allDrivers = [
             ...(fallbackResponse.data.data.freeDrivers || []),
@@ -170,7 +170,7 @@ const AllOrders = () => {
 
     try {
       setAssignmentLoading(true);
-      const response = await axios.post('http://localhost:5000/api/distributions/assign', {
+      const response = await axios.post('https://fabricflow-backend1.onrender.com/api/distributions/assign', {
         orderId: selectedOrder._id,
         driverId: selectedDriver,
         assignedBy: 'Admin', // You can get this from auth context
@@ -252,7 +252,7 @@ const AllOrders = () => {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 max-w-lg">
           <p className="font-semibold text-lg">{error}</p>
           <p className="text-sm">
-            Make sure the backend server is running on http://localhost:5000
+            Make sure the backend server is running on https://fabricflow-backend1.onrender.com
           </p>
         </div>
         <button 

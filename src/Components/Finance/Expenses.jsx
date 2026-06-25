@@ -16,9 +16,9 @@ import Swal from "sweetalert2";
 
 ChartJS.register(CategoryScale, LinearScale, ArcElement, Title, Tooltip, Legend);
 
-const EXPENSE_URL = "http://localhost:5000/api/expenses";
-const PURCHASE_URL = "http://localhost:5000/api/Purchase";
-const PAYROLL_URL = "http://localhost:5000/api/payrolls";
+const EXPENSE_URL = "https://fabricflow-backend1.onrender.com/api/expenses";
+const PURCHASE_URL = "https://fabricflow-backend1.onrender.com/api/Purchase";
+const PAYROLL_URL = "https://fabricflow-backend1.onrender.com/api/payrolls";
 
 const Expenses = () => {
   const navigate = useNavigate();

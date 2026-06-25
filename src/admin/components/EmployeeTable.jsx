@@ -104,7 +104,7 @@ const EmployeeTable = () => {
       // First, try to fetch from backend
       let backendEmployees = [];
       try {
-        const response = await axios.get('http://localhost:5000/employees');
+        const response = await axios.get('https://fabricflow-backend1.onrender.com/employees');
         backendEmployees = response.data?.employees || response.data || [];
         console.log('Fetched employees from backend:', backendEmployees.length);
       } catch (backendError) {
@@ -185,7 +185,7 @@ const EmployeeTable = () => {
     if (!employeeToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5000/employees/${employeeToDelete._id}`);
+      await axios.delete(`https://fabricflow-backend1.onrender.com/employees/${employeeToDelete._id}`);
       setEmployees(employees.filter(emp => emp._id !== employeeToDelete._id));
       showAlert(`Employee "${employeeToDelete.empName}" deleted successfully!`, 'success');
       setDeleteDialogOpen(false);

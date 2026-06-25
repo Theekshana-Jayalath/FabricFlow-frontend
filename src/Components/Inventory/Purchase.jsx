@@ -31,18 +31,18 @@ function Purchases() {
 
   useEffect(() => {
     if (!purchaseLoaded) {
-      axios.get("http://localhost:5000/api/Purchase")
+      axios.get("https://fabricflow-backend1.onrender.com/api/Purchase")
         .then((res) => {
           setPurchases(res.data.purchases || res.data);
           setPurchaseLoaded(true);
         })
         .catch((err) => console.error("Failed to fetch purchases:", err));
 
-      axios.get("http://localhost:5000/api/Supplier")
+      axios.get("https://fabricflow-backend1.onrender.com/api/Supplier")
         .then((res) => setSuppliers(res.data.suppliers || res.data))
         .catch((err) => console.error("Failed to fetch suppliers:", err));
 
-      axios.get("http://localhost:5000/api/Material")
+      axios.get("https://fabricflow-backend1.onrender.com/api/Material")
         .then((res) => setMaterials(res.data.materials || res.data))
         .catch((err) => console.error("Failed to fetch materials:", err));
     }
@@ -126,7 +126,7 @@ function Purchases() {
       date: newPurchase.date || new Date()
     };
 
-    axios.post("http://localhost:5000/api/Purchase", purchaseToAdd)
+    axios.post("https://fabricflow-backend1.onrender.com/api/Purchase", purchaseToAdd)
       .then((res) => {
         const created = res.data.purchase || res.data;
         const supplierObj = suppliers.find(s => s._id === created.supplierId) || { name: "N/A" };
@@ -165,7 +165,7 @@ function Purchases() {
       materialId: editPurchase.materialId?._id || editPurchase.materialId
     };
 
-    axios.put(`http://localhost:5000/api/Purchase/${editPurchase._id}`, updatedPurchase)
+    axios.put(`https://fabricflow-backend1.onrender.com/api/Purchase/${editPurchase._id}`, updatedPurchase)
       .then((res) => {
         const updated = res.data.purchase || res.data;
         const supplierObj = suppliers.find(s => s._id === updated.supplierId) || { name: "N/A" };
@@ -251,7 +251,7 @@ function Purchases() {
                       className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
                       onClick={() => {
                         if (!confirm("Are you sure?")) return;
-                        axios.delete(`http://localhost:5000/api/Purchase/${p._id}`)
+                        axios.delete(`https://fabricflow-backend1.onrender.com/api/Purchase/${p._id}`)
                           .then(() => setPurchases(purchases.filter(pc => pc._id !== p._id)))
                           .catch(err => alert("Error deleting purchase: " + err));
                       }}
