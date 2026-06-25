@@ -48,8 +48,12 @@ const VehicleManagement = () => {
       const data = await response.json();
       
       if (data.success) {
-        setVehicles(data.data);
-        setPagination(data.pagination);
+        setVehicles(data.vehicles || []);
+        setPagination({
+          currentPage: page,
+          totalPages: data.totalPages || 1,
+          totalVehicles: data.totalVehicles || 0
+        });
       }
     } catch (err) {
       setError(err.message);
@@ -74,7 +78,9 @@ const VehicleManagement = () => {
 
       const data = await response.json();
       
-      if (data.success) {
+      if (Array.isArray(data)) {
+        setDrivers(data);
+      } else if (data.success && data.data) {
         setDrivers(data.data);
       }
     } catch (err) {

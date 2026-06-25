@@ -51,7 +51,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       subItems: [
         { text: 'User Management', path: '/admin/users', icon: <People /> },
         { text: 'Employee Management', path: '/admin/employees', icon: <People /> },
-        { text: 'System Settings', path: '/admin/settings', icon: <AdminPanelSettings /> }
+        { text: 'System Settings', path: '/settings', icon: <AdminPanelSettings /> }
       ]
     },
     {
@@ -71,10 +71,11 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: financeOpen,
       onClick: () => setFinanceOpen(!financeOpen),
       subItems: [
-        { text: 'Financial Overview', path: '/admin/finance/overview', icon: <Assessment /> },
-        { text: 'Revenue Reports', path: '/admin/finance/revenue', icon: <TrendingUp /> },
-        { text: 'Expense Tracking', path: '/admin/finance/expenses', icon: <AccountBalance /> },
-        { text: 'Budget Planning', path: '/admin/finance/budget', icon: <Analytics /> }
+        { text: 'Dashboard', path: '/admin/finance/dashboard', icon: <Assessment /> },
+        { text: 'Expenses', path: '/admin/finance/expenses', icon: <TrendingUp /> },
+        { text: 'Invoices', path: '/admin/finance/invoices', icon: <AccountBalance /> },
+        { text: 'payrolls', path: '/admin/finance/payrolls', icon: <Analytics /> },
+        { text: 'Reports', path: '/admin/finance/reports', icon: <Analytics /> }
       ]
     },
     {
@@ -84,10 +85,11 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
       isOpen: inventoryOpen,
       onClick: () => setInventoryOpen(!inventoryOpen),
       subItems: [
-        { text: 'Stock Management', path: '/admin/inventory/stock', icon: <Inventory /> },
-        { text: 'Material Tracking', path: '/admin/inventory/materials', icon: <Inventory /> },
-        { text: 'Quality Control', path: '/admin/inventory/quality', icon: <Assessment /> },
-        { text: 'Supplier Management', path: '/admin/inventory/suppliers', icon: <People /> }
+        { text: 'Dashboard', path: '/admin/inventory/dashboard', icon: <Inventory /> },
+        { text: 'Material', path: '/admin/inventory/materials', icon: <Inventory /> },
+        { text: 'Purchase', path: '/admin/inventory/purchase', icon: <Assessment /> },
+        { text: 'Supplier', path: '/admin/inventory/suppliers', icon: <People /> },
+        { text: 'Reports', path: '/admin/inventory/reports', icon: <People /> }
       ]
     },
     {
@@ -101,7 +103,7 @@ const AdminSidebar = ({ drawerWidth = 280 }) => {
         { text: 'Vehicle Management', path: '/admin/sales/vehicles', icon: <LocalShipping /> },
         { text: 'Delivery Management', path: '/admin/delivery/management', icon: <LocalShipping /> },
         { text: 'All Delivery Orders', path: '/admin/orders/all-delivery-orders', icon: <Assignment /> },
-        { text: 'Asign Orders', path: '/admin/sales/asignOrders', icon: <People /> },
+        { text: 'Asigned Orders', path: '/admin/sales/asignOrders', icon: <People /> },
         
       ]
     }
